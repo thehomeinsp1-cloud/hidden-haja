@@ -231,10 +231,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tray .lkp svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .sneak .sv{font-weight:400;font-family:"Jua",sans-serif;color:var(--brick);min-width:3.2em;text-align:right}
 #makePane.peek .lab{background:var(--mint);color:#fff}
-/* 바꿀 수 있는 물건: 시공 실수를 고른 동안 옅은 점선으로 계속, 고른 순간엔 세 번 깜빡. 확대해도 선 굵기는 그대로(--ps = 1/배율) */
-.objhl{position:absolute;border:calc(2.5px * var(--ps,1)) dashed var(--brick);border-radius:6px;box-shadow:0 0 0 calc(2px * var(--ps,1)) rgba(255,255,255,.6);opacity:.45}
+/* 바꿀 수 있는 물건: 시공 실수를 고른 동안 점선으로 계속, 고른 순간엔 세 번 깜빡. 확대해도 선 굵기·최소 크기(화면 26px, 360폭에서 작은 물건도 보이고 눌리게)는 그대로(--ps = 1/배율) */
+.objhl{position:absolute;transform:translate(-50%,-50%);min-width:calc(26px * var(--ps,1));min-height:calc(26px * var(--ps,1));border:calc(2.5px * var(--ps,1)) dashed var(--brick);border-radius:6px;box-shadow:0 0 0 calc(2px * var(--ps,1)) rgba(255,255,255,.7);opacity:.75}
 .objhl.blink{animation:objhl .5s ease-in-out 3 both}
-@keyframes objhl{50%{opacity:.15}}
+@keyframes objhl{50%{opacity:.2}}
 .sneak{display:flex;align-items:center;gap:10px;font-size:var(--f2);color:var(--ink2);padding:4px 4px 2px;flex:0 0 auto}
 .sneak input{flex:1;height:44px;margin:0;background:none;-webkit-appearance:none;appearance:none}
 .sneak input::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--line)}
@@ -298,8 +298,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mag .row{display:flex;gap:8px;margin-top:auto}.mag .row .btn{flex:1;height:48px}
 /* 속임 등급(올리기 전 확인) */
 .trick{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:14px;padding:10px 12px}
-.trick .gr{font-family:"Jua",sans-serif;font-size:2.75rem;line-height:1;width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff;background:var(--ink)}
-.trick .gr.S{background:linear-gradient(135deg,#F2A100,#FFD76A);color:#5A3A00}.trick .gr.A{background:var(--brick)}.trick .gr.B{background:var(--mint)}
+.trick .gr,.grb .gr{font-family:"Jua",sans-serif;font-size:2.75rem;line-height:1;width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff;background:var(--ink)}
+.trick .gr.S,.grb .gr.S{background:linear-gradient(135deg,#F2A100,#FFD76A);color:#5A3A00}.trick .gr.A,.grb .gr.A{background:var(--brick)}.trick .gr.B,.grb .gr.B{background:var(--mint)}
+.grb,.chips .grb{display:inline-flex;align-items:center;gap:6px;font-family:"Jua",sans-serif;font-size:1.05rem;color:var(--ink)}.grb .gr{width:44px;height:44px;font-size:1.8rem;border-radius:12px}.grb .gr.S{box-shadow:0 0 0 3px #FFE08A,0 0 14px #F2A100}
 .trick p{margin:0;color:var(--ink)}.trick small{display:block;color:var(--ink2);font-size:var(--f3)}
 .bas{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .bas figure{margin:0;flex:0 0 auto;position:relative;display:flex;flex-direction:column;gap:2px}
@@ -1572,6 +1573,7 @@ function dailyStage(t = today()){
 // 방 그림 가공 크기 6:5 (tools/process.py W·H와 같게). 캔버스·CSS 비율은 모두 여기서 나온다
 const W = 1200, H = 1000;
 ['cvA', 'cvB', 'cvM', 'cvMo'].forEach((id) => { $(id).width = W; $(id).height = H; });
+$('cvMo').getContext('2d', { willReadFrequently:true }); // 원본(M.src): objFit이 방마다 getImageData를 여러 번 읽는다
 document.querySelectorAll('canvas.dark,canvas.fog').forEach((c) => { c.width = W / 4; c.height = H / 4; }); // 정전·결로 가림막은 1/4 해상도
 $('mini').width = 144; $('mini').height = Math.round(144 * H / W);
 document.documentElement.style.setProperty('--ar', W / H);
@@ -3304,10 +3306,10 @@ function tutDone(){
   P.tut = 1; P.seen.v11 = P.seen.manual = 1; P.boxes.box = (P.boxes.box || 0) + ECON.tutBox; matAdd('soil', ECON.tutSoil); save(); PLAT.log('tut_done'); confetti(); $('coach').hidden = true;
   const g = G, html = G.resultHtml = `<div class="stamp">점검<br>완료</div><span class="tape" style="align-self:flex-start">첫 점검 끝</span>
     <h3 class="disp" style="padding-right:90px">다른 곳 ${G.diffs.length}곳을 다 찾았어요</h3>
-    <p>첫 점검 선물이에요! 흙으로 내 집 첫 단계를 지어 봐요.</p>
-    <div class="gain"><span class="box">공구 상자 +${ECON.tutBox}</span></div>${matHtml()}
-    <button class="btn y" type="button" data-openbox="box">공구 상자 열기</button>
-    <button class="btn" type="button" data-go="home">내 집 짓기</button>`;
+    <p>첫 점검 선물이에요! 이제 진짜 1층을 점검하러 가요.</p>
+    <div class="gain"><span class="box">공구 상자 +${ECON.tutBox}</span></div>${matHtml(undefined, false)}
+    <button class="btn y" type="button" data-act="lv1">1층 점검 가기</button>
+    <div class="row"><button class="btn w" type="button" data-openbox="box">공구 상자 열기</button><button class="btn w" type="button" data-go="home">내 집 짓기</button></div>`;
   tutPics().then((pics) => G === g && deck([...shapeCards(pics), mapCard()], { end:'첫 선물 받기', done:() => G === g && endSheet(html) }));
 }
 // 이웃 집 결과: 점수 기록 + 재밌어요/억지예요
@@ -3375,6 +3377,7 @@ $('sheet').addEventListener('click', (e) => {
     const g = G, html = G.resultHtml = `<h3 class="disp">빨간 테이프 자리를 기억해요</h3><div class="row"><button class="btn w" type="button" data-go="${backOf(g.st)}">나가기</button><button class="btn y" type="button" data-act="retry">다시 도전</button></div>`;
     setTimeout(() => G === g && endSheet(html), 2600); return; }
   if (a === 'next') { const [ci, fl] = posOf(nextL(G.st)); mapCi = ci; return start(stageOf(ci, fl)); }
+  if (a === 'lv1') { const [ci, fl] = posOf(1); mapCi = ci; return start(stageOf(ci, fl)); } // 연습 판 결과에서 바로 1층
   if (a === 'free') return start(freeStage());
   if (a === 'ghostgo') { mapCi = BONUS; closeSheet(); stopGame(); return show('map'); } // 보너스 단지가 열린 결과에서 바로 유령 저택 지도로
   if (a === 'publish') return publish();
@@ -3393,7 +3396,7 @@ $('sheet').addEventListener('click', (e) => { if (e.target !== $('sheet') || DEC
 /* ───────── 하자 숨기기 (시공팀) ───────── */
 // M.d: 다음에 놓을 하자의 교묘함(0~1) · M.sel: 돋보기 카드에 열린 하자 번호(-1 닫힘) · M.vs: 하자별 보인 정도(visScore. 올린 집 items에는 안 넣는다)
 // M.cmp·M.cx: 비교 손잡이 켜짐·위치(판 너비 %) · M.peek·M.blink: 꾹 누르기·깜빡 비교로 원본 전체를 보이는 중
-const M = { scene:null, src:null, items:[], tool:'crack', trap:false, dark:false, d:.5, sel:-1, vs:new WeakMap(), top:new WeakSet(), cmp:false, cx:50, peek:false, blink:false };
+const M = { scene:null, src:null, items:[], tool:'crack', trap:false, dark:false, d:.5, sel:-1, vs:new WeakMap(), top:new WeakSet(), fit:new Map(), cmp:false, cx:50, peek:false, blink:false };
 // 편집 그림 확대(1~4배): 판 화면 확대와 같은 꼴(translate %·scale, pan 범위 -(s-1)*100 ~ 0). 그림이 하나라 판 쪽 scale·pan과는 따로 둔다
 const MZ = { s:1, x:0, y:0 };
 const realItems = () => M.items.filter((it) => !it.trap);
@@ -3411,15 +3414,17 @@ const dhd = (who, f, title) => `<div class="dhd"><span class="masc">${who === 'r
 //   lo = 가장 교묘한 단계의 하위 25%(판정 최소 이상), hi = 가장 대놓고 단계의 상위 10%. 가는 선(균열 1~1.9·이음새 1.6~2.3)과
 //   번지는 얼룩(곰팡이 11~36)은 같은 '감쪽같음'이어도 점수가 열 배 달라 종류별로 잰다. 보통 자리에서 대놓고 ●●○○○ · 3단계 ●●●○○ · 교묘하게 ●●●●○,
 //   무늬·그늘진 자리를 고르면 ●●●●●. remove·flip·dup은 교묘함과 상관없는 연산이라 자리로만 갈린다(D_FIXED, 카드에서 교묘함 숨김).
+//   v12(20261001) 거미줄·규격 다시 잼(sneakTable, 규격은 맞춘 물건 크기): 거미줄 평균 점 2.0→4.3, 규격 2.8→3.7 (규격은 단계 차가 작아 1단계가 높다 → BACKLOG)
 //   shift는 덜 밀수록(교묘할수록) 가장자리가 두 겹으로 보여 점수가 오히려 커진다(222자리 평균 L1 3.8 → L5 2.6) → 단계를 숨긴다
 const VIS_REF = { crack:[1, 1.9], stain:[8.1, 28.1], mold:[11.2, 36], bubble:[2.8, 11.8], hole:[1, 6.2], scratch:[2.9, 6.5], dent:[1.1, 3.5], paint:[4.5, 24.9],
-  web:[2.3, 4.5], cobweb:[2.5, 8], drip:[5, 16.7], rust:[2.5, 8.9], dirt:[5.9, 18.9], chip:[1.8, 5.6], gap:[1.6, 2.3],
-  recolor:[10.4, 42.7], remove:[19.3, 29.2], flip:[28, 42.4], tilt:[19.4, 36.4], scale:[19, 35], shift:[22.3, 39.8], dup:[32.4, 47.8], dim:[10.7, 29] };
+  web:[2.3, 4.5], cobweb:[2.4, 7.9], drip:[5, 16.7], rust:[2.5, 8.9], dirt:[5.9, 18.9], chip:[1.8, 5.6], gap:[1.6, 2.3],
+  recolor:[10.4, 42.7], remove:[19.3, 29.2], flip:[28, 42.4], tilt:[19.4, 36.4], scale:[17.6, 33.3], shift:[22.3, 39.8], dup:[32.4, 47.8], dim:[10.7, 29] };
 const D_FIXED = ['remove', 'flip', 'dup', 'shift'];
 const sneakOf = (it) => { const [lo, hi] = VIS_REF[it.k] || [1, 10], sc = M.vs.get(it); return sc == null ? .5 : clamp(Math.log(hi / Math.max(sc, .01)) / Math.log(hi / lo), 0, 1); };
 const sneakDots = (it) => 1 + Math.round(sneakOf(it) * 4);
 const dotsOf = (n) => [1, 2, 3, 4, 5].map((i) => `<i${i <= n ? ' class="on"' : ''}></i>`).join('');
 // 속임 등급: 평균 감쪽같음 60점 + 서로 다른 종류(5가지면 만점) 20점 + 하자 수(3개 0 ~ 7개 만점) 20점. fool은 재미용 예상(10명 중)
+const GRADE_SAY = { S:'감쪽같아요! 최고 시공팀이에요', A:'꽤 감쪽같아요!', B:'좋아요! 다음엔 더 감쪽같이 해 봐요', C:'처음엔 다 그래요. 다른 종류를 섞어 봐요' };
 function trickGrade(its = realItems()){
   const n = its.length; if (!n) return { pt:0, g:'C', fool:1, tip:'' };
   const a = its.reduce((s, it) => s + sneakOf(it), 0) / n * 60, b = clamp((new Set(its.map((i) => i.k)).size - 1) / 4, 0, 1) * 20, c = clamp((n - 3) / 4, 0, 1) * 20, pt = Math.round(a + b + c);
@@ -3427,6 +3432,23 @@ function trickGrade(its = realItems()){
   const tip = pt >= 80 ? '' : `${nx[0]}까지 ${nx[1] - pt}점! ` + [[a / 60, '하자 번호를 눌러 더 감쪽같이 해 봐요'], [b / 20, '다른 종류를 섞으면 더 헷갈려요'], [c / 20, '하자를 하나 더 숨겨 봐요']].sort((x, y) => x[0] - y[0])[0][1];
   return { pt, g:pt >= 80 ? 'S' : pt >= 60 ? 'A' : pt >= 40 ? 'B' : 'C', fool:clamp(Math.round(pt / 10), 1, 9), tip };
 }
+// 점선 칸을 실제 물건에 맞춘다: 칸 가운데 1.25배 정사각형의 밝기 기울기(|dx|+|dy|) 합에서 축별 5~95% 구간 → [x, y, w, h]. 너무 작거나 밋밋하면 원래 칸
+// ponytail: 방당 물건 28개라 캐시 없이도 되지만 refreshMarks가 자주 돌아서 M.fit(방을 열 때 비움)에 둔다
+function objFit(o, src = M.src){
+  if (M.fit.has(o)) return M.fit.get(o);
+  const n = Math.min(Math.round(o[2] * 1.25), W, H), x0 = clamp(Math.round(o[0] + o[2] / 2 - n / 2), 0, W - n), y0 = clamp(Math.round(o[1] + o[3] / 2 - n / 2), 0, H - n);
+  const p = src.getContext('2d').getImageData(x0, y0, n, n).data, L = new Float32Array(n * n), ax = new Float32Array(n), ay = new Float32Array(n); let tot = 0;
+  for (let i = 0; i < n * n; i++) L[i] = p[i * 4] * .3 + p[i * 4 + 1] * .59 + p[i * 4 + 2] * .11;
+  for (let y = 1; y < n - 1; y++) for (let x = 1; x < n - 1; x++) { const i = y * n + x, g = Math.abs(L[i + 1] - L[i - 1]) + Math.abs(L[i + n] - L[i - n]); ax[x] += g; ay[y] += g; tot += g; }
+  // 축 기울기 합에서 바닥값(하위 25%: 벽지·타일 같은 고른 무늬)을 빼야 물건만 남는다 (안 빼면 110방 평균 넓이 비 1.09 → 빼면 .71)
+  const span = (a) => { const b = Float32Array.from(a).sort()[Math.floor(n * .25)], e = Array.from(a, (v) => Math.max(0, v - b)), t = e.reduce((u, v) => u + v, 0); let c = 0, lo = -1, hi = n - 1;
+    for (let i = 0; i < n; i++) { c += e[i]; if (lo < 0 && c >= t * .05) lo = i; if (c >= t * .95) { hi = i; break; } } lo = Math.max(0, lo); return [lo, hi - lo + 1]; };
+  const [fx, fw] = span(ax), [fy, fh] = span(ay);
+  const r = tot / Math.max(1, (n - 2) ** 2) < 6 || fw < o[2] * .45 || fh < o[2] * .45 ? [o[0], o[1], o[2], o[3]] : [x0 + fx, y0 + fy, fw, fh];
+  M.fit.set(o, r); return r;
+}
+// 숨기기 화면의 물건 크기: 맞춘 상자 긴 변의 1.15배 (원래 칸 .7~1.3배 안)
+const objSize = (o, f = objFit(o)) => clamp(Math.round(Math.max(f[2], f[3]) * 1.15), Math.round(o[2] * .7), Math.round(o[2] * 1.3));
 const inside = (it) => !(it.x - it.s * .65 < 0 || it.y - it.s * .65 < 0 || it.x + it.s * .65 > W || it.y + it.s * .65 > H);
 const near = (it, skip = -1) => M.items.some((q, j) => j !== skip && Math.hypot(q.x - it.x, q.y - it.y) < (hitR(q) + hitR(it)) * .9);
 
@@ -3440,7 +3462,7 @@ function renderRooms(){
 }
 async function makeOpen(id){
   const img = await loadImg(id);
-  M.scene = sceneById(id); M.items = []; M.src = srcCanvas(img, $('cvMo')); M.sel = -1; M.cmp = M.peek = M.blink = false; M.cx = 50; $('mag').hidden = true;
+  M.scene = sceneById(id); M.fit.clear(); M.items = []; M.src = srcCanvas(img, $('cvMo')); M.sel = -1; M.cmp = M.peek = M.blink = false; M.cx = 50; $('mag').hidden = true;
   $('sneak').value = Math.round(M.d * 4) + 1; $('sneakV').textContent = `${$('sneak').value}단계`;
   show('make'); $('makeTitle').textContent = `${M.scene.name}에 숨기기`; mzTo(1); redrawMake(); fitMake();
 }
@@ -3483,7 +3505,9 @@ function redrawCanvas(mi = -1){
   return M.vs.get(M.items[mi]);
 }
 function refreshMarks(){
-  $('makeMarks').innerHTML = (objMode() && M.sel < 0 ? M.scene.objs.map((o) => `<i class="objhl" style="left:${o[0] / W * 100}%;top:${o[1] / H * 100}%;width:${o[2] / W * 100}%;height:${o[3] / H * 100}%"></i>`).join('') : '')
+  // 점선은 아직 바꾸지 않은 물건만, 7개를 다 숨기면 없앤다
+  $('makeMarks').innerHTML = (objMode() && M.sel < 0 && realItems().length < 7 ? M.scene.objs.map((o) => { const f = objFit(o), c = [f[0] + f[2] / 2, f[1] + f[3] / 2, o[0] + o[2] / 2, o[1] + o[3] / 2];
+      if (M.items.some((q) => Math.hypot(q.x - c[0], q.y - c[1]) < hitR(q) || Math.hypot(q.x - c[2], q.y - c[3]) < hitR(q))) return ''; return `<i class="objhl" style="left:${(f[0] + f[2] / 2) / W * 100}%;top:${(f[1] + f[3] / 2) / H * 100}%;width:${f[2] / W * 100}%;height:${f[3] / H * 100}%"></i>`; }).join('') : '')
     + M.items.map((it, i) => `<span class="pin${it.trap ? ' trap' : ''}${i === M.sel ? ' on' : ''}" data-i="${i}" style="left:${clamp((it.x + hitR(it) * 1.4) / W * 100, 3, 97)}%;top:${clamp((it.y - hitR(it) * 1.4) / H * 100, 3, 97)}%">${i + 1}</span>`).join(''); // 번호가 그림 밖으로 잘리지 않게
   $('makeMarks').classList.toggle('sel', M.sel >= 0);
 }
@@ -3514,20 +3538,24 @@ function placeAt(cx, cy){
   const d = M.d, k = M.tool, isObj = isObjKind(k);
   if (M.trap) { if (M.items.filter((i) => i.trap).length >= (P.unlock.trap2 ? 2 : 1)) return toast(P.unlock.trap2 ? '함정은 2개까지예요' : '함정 2개는 공구 상점에서 얻을 수 있어요'); }
   else if (realItems().length >= 7) return toast('하자는 7개까지 숨길 수 있어요');
-  let s, px = x, py = y;
-  if (isObj) {
-    // 누른 곳 근처 물건에 맞춘다
-    let best = null, bd = 1e9; M.scene.objs.forEach((o) => { const ox = o[0] + o[2] / 2, oy = o[1] + o[3] / 2, dd = Math.hypot(ox - x, oy - y); if (dd < Math.max(70, o[2] * .7) && dd < bd) { bd = dd; best = o; } });
-    if (best) { px = best[0] + best[2] / 2; py = best[1] + best[3] / 2; s = Math.round(best[2] * 1.2); } else s = 96;
-  } else s = lerp(80, 46, d);
-  const it = { k, x:Math.round(px), y:Math.round(py), s:Math.round(s), d, seed:Math.floor(Math.random() * 1e9) };
-  if (M.trap) it.trap = 1;
-  if (k === 'dup') { // 옆자리(좌·우 중 가운데 쪽)에 하나 더
-    it.sx = it.x; it.sy = it.y; const dir = it.x > W / 2 ? -1 : 1; it.x = Math.round(it.x + dir * s * 1.05); it.y = Math.round(it.y + s * .1); }
-  if (!inside(it)) return toast('그림 가장자리에서 조금 안쪽을 눌러요');
-  if (near(it)) return toast('다른 하자와 너무 가까워요');
-  const thr = visMin(k), sc = applyItem(ctxM(), M.src, it, thr);
-  if (sc < thr) return toast(isObj ? '여긴 바꿔도 티가 안 나요. 물건을 눌러 보세요' : '너무 안 보여요. 조금 더 티 나게 해 봐요');
+  // 물건: 맞춘 상자 가운데·크기로 먼저, 안 보이면 원래 칸 가운데·o[2]*1.2로 한 번 더 (L55 헬스장 색 바꾸기 성공 47→62/84)
+  let best = null, bd = 1e9, cs;
+  if (isObj) { M.scene.objs.forEach((o) => { const f = objFit(o), dd = Math.hypot(f[0] + f[2] / 2 - x, f[1] + f[3] / 2 - y); if (dd < Math.max(56, Math.max(f[2], f[3]) * .7) && dd < bd) { bd = dd; best = o; } });
+    const f = best && objFit(best); cs = best ? [[f[0] + f[2] / 2, f[1] + f[3] / 2, objSize(best, f)], [best[0] + best[2] / 2, best[1] + best[3] / 2, best[2] * 1.2]] : [[x, y, 96]];
+  } else cs = [[x, y, lerp(80, 46, d)]];
+  let it, sc = -1, why = '';
+  const thr = visMin(k);
+  for (const [px, py, s] of cs) {
+    it = { k, x:Math.round(px), y:Math.round(py), s:Math.round(s), d, seed:Math.floor(Math.random() * 1e9) };
+    if (M.trap) it.trap = 1;
+    if (k === 'dup') { // 옆자리(좌·우 중 가운데 쪽)에 하나 더
+      it.sx = it.x; it.sy = it.y; const dir = it.x > W / 2 ? -1 : 1; it.x = Math.round(it.x + dir * it.s * 1.05); it.y = Math.round(it.y + it.s * .1); }
+    if (!inside(it)) { why = why || '그림 가장자리에서 조금 안쪽을 눌러요'; continue; }
+    if (near(it)) { why = why || '다른 하자와 너무 가까워요'; continue; }
+    sc = applyItem(ctxM(), M.src, it, thr); if (sc >= thr) break;
+    why = isObj ? (best ? '이 물건은 잘 안 바뀌어요. 다른 물건이나 다른 실수를 골라 봐요' : '여긴 바꿔도 티가 안 나요. 물건을 눌러 보세요') : '너무 안 보여요. 조금 더 티 나게 해 봐요';
+  }
+  if (sc < thr) return toast(why);
   M.items.push(it); M.vs.set(it, sc); placeFx(cx, cy); PLAT.haptic('tickWeak'); refreshMakeUi(); openMag(M.items.length - 1, false);
   // 비교 중 왼쪽(모델하우스 쪽)에 놓으면 큰 그림에 안 보이니 손잡이를 놓은 자리 왼쪽으로 옮긴다
   if (M.cmp) { const r = $('makePane').getBoundingClientRect(), u = (cx - r.left) / r.width * 100; if (u < M.cx) { M.cx = clamp(u - 12, 2, 98); cmpPaint(); } }
@@ -3697,16 +3725,19 @@ async function publishInner(){
   const id = `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   const p = { id, ar:AR, author:me(), room:M.scene.id, items:M.items.slice(), n:realItems().length, created:Date.now(), week:weekKey(), dark:!!M.dark, camo:worn('camo') ? 1 : 0, gold:worn('goldbrick') ? 1 : 0 };
   try { await savePuzzle(p); } catch (e) { return toast(e?.code === 'quota_exceeded' ? '저장 공간이 가득 찼어요' : '올리지 못했어요. 다시 눌러 주세요'); }
+  const g = trickGrade(realItems()); // 비우기 전에 (도장 옆 배지)
   sfx.evil(); confetti(); M.last = p; M.items = []; M.dark = false; M.trap = false; M.cmp = false; closeMag(); mzTo(1); redrawMake();
   const mis = track('publish'); if (mis.length) toast(mis.join(' · '));
-  if (!shared()) return stampSheet(`<div class="stamp r">시공<br>완료</div><span class="tape r" style="align-self:flex-start">저장했어요</span><h3 class="disp" style="padding-right:90px">내가 숨긴 집에 넣어 뒀어요</h3>
-    <p>도전장으로 보내면 친구가 이 집에서 하자를 찾아요.</p>
+  const gb = (t) => `<div class="chips" style="align-items:center"><span class="tape r">${t}</span><span class="grb" aria-label="속임 등급 ${g.g}"><span class="gr ${g.g}">${g.g}</span>속임 등급 ${g.g}${g.g === 'S' ? ' · 최고 등급!' : ''}</span></div>`;
+  const gl = `<p><b style="color:var(--ink)">${GRADE_SAY[g.g]}</b></p>`, pop = () => { FX.pop($('sheetIn').querySelector('.grb .gr')); if (g.g === 'S') sfx.clear(); };
+  if (!shared()) return stampSheet(`<div class="stamp r">시공<br>완료</div>${gb('저장했어요')}<h3 class="disp" style="padding-right:90px">내가 숨긴 집에 넣어 뒀어요</h3>
+    ${gl}<p>도전장으로 보내면 친구가 이 집에서 하자를 찾아요.</p>
     <button class="btn y" type="button" data-act="sendchal">친구에게 도전장 보내기</button>
-    <div class="row"><button class="btn w" type="button" data-act="mine">내가 숨긴 집</button><button class="btn r" type="button" data-go="rooms">하나 더 숨기기</button></div>`);
-  stampSheet(`<div class="stamp r">시공<br>완료</div><span class="tape r" style="align-self:flex-start">올렸어요</span><h3 class="disp" style="padding-right:90px">이제 점검관들이 찾으러 와요</h3>
-    <p>"내가 숨긴 집"에서 몇 명이 속았는지 볼 수 있어요.</p>
+    <div class="row"><button class="btn w" type="button" data-act="mine">내가 숨긴 집</button><button class="btn r" type="button" data-go="rooms">하나 더 숨기기</button></div>`), pop();
+  stampSheet(`<div class="stamp r">시공<br>완료</div>${gb('올렸어요')}<h3 class="disp" style="padding-right:90px">이제 점검관들이 찾으러 와요</h3>
+    ${gl}<p>"내가 숨긴 집"에서 몇 명이 속았는지 볼 수 있어요.</p>
     <button class="btn y" type="button" data-act="sendchal">친구에게 도전장 보내기</button>
-    <div class="row"><button class="btn w" type="button" data-go="feed">이웃 집 보기</button><button class="btn r" type="button" data-go="rooms">하나 더 숨기기</button></div>`);
+    <div class="row"><button class="btn w" type="button" data-go="feed">이웃 집 보기</button><button class="btn r" type="button" data-go="rooms">하나 더 숨기기</button></div>`); pop();
 }
 
 /* ───────── v11 카드 묶음: 인트로 · 하자 모양 · 게임 지도 · 처음 만날 때 설명 · 게임 방법 설명서 ─────────
@@ -3863,7 +3894,7 @@ function openBox(kind){
   // 상자에서 모이는 조각은 하루 ECON.shardPerDay개까지 (tools/econ.py 예산)
   const k = first ? 'dino' : pool[Math.floor(Math.random() * pool.length)], msg = grant(k), sh = Math.min(BOXES[kind].shards, Math.max(0, ECON.shardPerDay - dayCount('shard')));
   if (sh) { P.shards += sh; dayBump('shard', sh); } save();
-  const again = kind === 'box' && !P.boxes.box && dayCount('again') < ECON.againPerDay; // 남은 공구 상자가 없을 때만
+  const again = kind === 'box' && !P.boxes.box && dayCount('again') < ECON.againPerDay && P.stars.L1; // 남은 공구 상자가 없을 때만 · 1층을 깬 뒤에만(첫 상자에서 시작 코인을 바로 쓰지 않게)
   // 예비 동작(점점 세게 들썩, 딸깍이 빨라짐) → 뚜껑 팡 + 등급 색 빛기둥·번쩍 → 큰 그림 카드가 튀어 오르며 정착. 전설은 1.6배 느리게·흔들림·반짝이 비
   const RC = { c:'#9AAAB0', r:'#2E86F0', e:'#9B4FE0', l:'#F2A100' }, T = (ms) => ms * (rar === 'l' && !RM() ? 1.6 : 1), OPEN = T(1000);
   sheet(`<div class="boxstage"><div class="pillar" style="--pc:${RC[rar]}"></div><div class="crate ${kind}"><i></i></div></div><p style="text-align:center">${josa(BOXES[kind].name, '을', '를')} 여는 중…</p>`);
@@ -4014,9 +4045,9 @@ function homeHalf(){
 const matTxt = (n) => (P.home.stage >= HOME_MAX ? `코인 +${n * ECON.matCoin}` : `재료 +${n}`);
 const rwName = ([t, n]) => ({ coin:`코인 ${n}`, box:'공구 상자', gold:'황금 상자', shard:`전설 조각 ${n}`, dragon:P.own.dragon ? `전설 조각 ${n}` : `전설 펫 ${ITEMS.dragon.name}` }[t]); // 꼬마 용이 이미 있으면 조각 (homeReward)
 // 결과 시트: 이번 판 재료 칩 + '내 집' 카드 (막대가 판 시작 때 비율 p0에서 지금으로 차오르며 번쩍, 칩은 카드로 날아간다: matJuice)
-function matHtml(p0 = G?.homeP0 ?? homePct()){
+function matHtml(p0 = G?.homeP0 ?? homePct(), card = true){
   const got = Object.entries(MAT_NEW); if (!got.length) return '';
-  return `<div class="gain">${got.map(([k, n]) => `<span class="mat">${matImg(k)}${k === 'coin' ? '코인' : MATS[k]} +${n}</span>`).join('')}</div>${homeCardHtml('hmini', p0)}`;
+  return `<div class="gain">${got.map(([k, n]) => `<span class="mat">${matImg(k)}${k === 'coin' ? '코인' : MATS[k]} +${n}</span>`).join('')}</div>${card ? homeCardHtml('hmini', p0) : ''}`;
 }
 function homeCardHtml(cls, p0){
   const s = P.home.stage, nx = homeNext(), can = homeCan(), p = homePct();
