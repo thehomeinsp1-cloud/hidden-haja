@@ -220,27 +220,91 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tray{flex:0 0 auto;padding:4px 2px 2px}
 .tray .seg{display:flex;margin-bottom:6px}.tray .seg button{flex:1;padding:4px 6px}
 .tray .kg{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);justify-content:start;gap:6px;overflow-x:auto;scrollbar-width:none}
-.tray .kg button{min-height:var(--tap);border:0;border-radius:12px;padding:8px 11px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);white-space:nowrap;font-size:var(--f2);flex:0 0 auto}
+.tray .kg button{min-height:var(--tap);border:0;border-radius:12px;padding:4px 11px 4px 5px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);white-space:nowrap;font-size:var(--f2);flex:0 0 auto;display:inline-flex;align-items:center;gap:6px}
 .tray .kg button.mis{box-shadow:inset 0 0 0 1.5px #E7C7BC}
 .tray .kg button[aria-pressed="true"]{background:var(--brick);color:#fff;box-shadow:none}
 .tray .kg.trap button[aria-pressed="true"]{background:var(--ink)}
+/* v11 고르기 쉽게: 칩마다 그림(하자는 defIcon, 시공 실수는 전후 SVG)·잠금은 자물쇠+가격 */
+.dock .ic{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;flex:0 0 auto;background:#fff;color:#6E2A1B}
+.dock .ic img{width:34px;height:34px}.dock .ic svg.mis{width:30px;height:30px}
+.tray .lkp{font-style:normal;display:inline-flex;align-items:center;gap:2px;font-size:var(--f3);opacity:.85}
+.tray .lkp svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .sneak .sv{font-weight:400;font-family:"Jua",sans-serif;color:var(--brick);min-width:3.2em;text-align:right}
 #makePane.peek .lab{background:var(--mint);color:#fff}
-.objhl{position:absolute;border:2.5px dashed var(--brick);border-radius:6px;box-shadow:0 0 0 2px rgba(255,255,255,.6);animation:objhl .5s ease-in-out 3 both}
+/* 바꿀 수 있는 물건: 시공 실수를 고른 동안 옅은 점선으로 계속, 고른 순간엔 세 번 깜빡. 확대해도 선 굵기는 그대로(--ps = 1/배율) */
+.objhl{position:absolute;border:calc(2.5px * var(--ps,1)) dashed var(--brick);border-radius:6px;box-shadow:0 0 0 calc(2px * var(--ps,1)) rgba(255,255,255,.6);opacity:.45}
+.objhl.blink{animation:objhl .5s ease-in-out 3 both}
 @keyframes objhl{50%{opacity:.15}}
-.pins .need{font-size:var(--f2);color:var(--ink2);padding:6px 2px}
 .sneak{display:flex;align-items:center;gap:10px;font-size:var(--f2);color:var(--ink2);padding:4px 4px 2px;flex:0 0 auto}
 .sneak input{flex:1;height:44px;margin:0;background:none;-webkit-appearance:none;appearance:none}
 .sneak input::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--line)}
 .sneak input::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-11px;border-radius:50%;background:var(--brick);box-shadow:0 0 0 3px #fff,0 1px 3px rgba(0,0,0,.3)}
 .sneak input::-moz-range-track{height:6px;border-radius:3px;background:var(--line)}
 .sneak input::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:var(--brick);box-shadow:0 0 0 3px #fff}
-.pins{display:flex;flex-wrap:wrap;gap:6px;padding:6px 2px;min-height:40px;flex:0 0 auto}
-.pins span.pc{display:inline-flex;align-items:center;gap:4px;min-height:var(--tap);border-radius:12px;padding:0 8px 0 12px;background:var(--brickBg);color:#6E2A1B;font-size:var(--f2)}
-.pins button{width:32px;height:32px;border:0;border-radius:50%;background:#fff;color:#6E2A1B;font-size:var(--f2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-.pin{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--brick);color:#fff;font-family:"Jua",sans-serif;font-size:var(--f3);display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 0 0 2px #fff}
-#makePane.peek .pin{opacity:0}
+.pins{display:flex;flex-direction:column;gap:6px;padding:4px 2px;min-height:40px;flex:1 1 auto;overflow:hidden}
+.pins .cnt{font-size:var(--f3);color:var(--ink2)}
+.pins .pcs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
+.pins span.pc{display:inline-flex;align-items:center;gap:2px;min-height:var(--tap);border-radius:12px;padding:0 6px 0 3px;background:var(--brickBg);color:#6E2A1B;font-size:var(--f2);flex:0 0 auto}
+.pins span.pc.trap{background:#E4E9E8;color:var(--ink)}
+.pins .pk{display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:3px 2px;min-height:var(--tap);font-size:var(--f2);color:inherit;white-space:nowrap;text-align:left}
+.pins .pn{display:flex;flex-direction:column;gap:3px;line-height:1.1}
+.pins [data-del]{width:32px;height:32px;border:0;border-radius:50%;background:#fff;color:#6E2A1B;font-size:var(--f2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.pins .dots{display:flex;gap:2px}.pins .dots i{width:7px;height:7px;border-radius:50%;background:rgba(110,42,27,.2)}.pins .dots i.on{background:var(--brick)}
+.pins .say{flex:0 1 auto;min-height:0}
+/* 숨긴 자리 번호: 눌러서 돋보기 카드를 다시 연다. 확대해도 크기 그대로 */
+.pin{position:absolute;transform:translate(-50%,-50%) scale(var(--ps,1));width:22px;height:22px;border-radius:50%;background:var(--brick);color:#fff;font-family:"Jua",sans-serif;font-size:var(--f3);display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 0 0 2px #fff}
+#makeMarks .pin{pointer-events:auto}#makeMarks .pin::before{content:"";position:absolute;top:-11px;right:-11px;bottom:-11px;left:-11px}
+#makeMarks .pin.on{background:var(--tape);color:var(--tapeInk);box-shadow:0 0 0 2px #fff,0 0 0 4.5px var(--brick);animation:pinon 1s ease-in-out infinite alternate}
+@keyframes pinon{to{box-shadow:0 0 0 2px #fff,0 0 0 8px rgba(180,83,58,.35)}}
+#makePane.peek .pin,#makePane.peek .objhl,#makePane.bl .pin{opacity:0}
+#makeMarks.sel .pin:not(.on){opacity:.35} /* 카드를 연 동안 다른 번호는 옅게(고른 하자를 덜 가리게) */
 .zoomer canvas.peekc{position:absolute;top:0;left:0;pointer-events:none}
+/* v11 숨기기 화면: 그림은 머리줄 바로 아래 가장 크게, 고르기·목록·도구는 아래 칸(dock). 돋보기 카드는 dock만 덮는다 */
+#make .panes{flex:0 0 auto}
+#make>.dock{margin:0;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:relative}
+.dock>:not(.mag){margin-left:10px;margin-right:10px}
+@media (max-height:700px){#tray .kg{grid-template-rows:auto}.mag{gap:4px;padding-top:6px}.mag .mnote{display:none}.mag .mc{min-height:80px}.mag .rc{width:48px;height:48px}} /* 짧은 화면: 칩 한 줄(옆으로 넘김) → 그림을 덜 줄이고, 돋보기 카드는 버튼까지 한 화면에 */
+.tools.hide{gap:5px;padding:4px 0 6px}.tools.hide .btn{flex:1 1 0;min-width:0;padding:0 4px;font-size:1rem}
+.tools.hide #undoBtn{flex:0 0 48px}.tools.hide #pubBtn{flex:1.4 1 0}
+.tools.hide svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tools.hide .btn[aria-pressed="true"],.tools.hide #blinkBtn.on{background:var(--ink);color:#fff;box-shadow:none}
+.lab.labr{left:auto;right:4px}
+/* 비교 손잡이: 왼쪽은 모델하우스, 오른쪽은 우리 집 */
+.cmp{position:absolute;top:0;bottom:0;left:50%;width:36px;margin-left:-18px;z-index:3;touch-action:none;cursor:ew-resize}
+.cmp i{position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 0 1px rgba(31,50,55,.3)}
+.cmp b{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
+.cmp svg{width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+/* 살금이(시공팀 너구리) 그림 + 말풍선 */
+.rc{width:60px;height:60px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.rc img{width:100%;height:100%;object-fit:contain}
+.rc .ic{width:48px;height:48px;border-radius:50%;background:var(--brickBg);color:#6E2A1B}.rc .ic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bub{position:relative;margin:0;background:var(--bg);border-radius:12px;padding:6px 10px;font-family:"Jua",sans-serif;font-size:var(--f1);color:var(--ink);line-height:1.35}
+.bub::before{content:"";position:absolute;left:-7px;top:12px;border:7px solid transparent;border-left:0;border-right-color:var(--bg)}
+.say{display:flex;align-items:center;gap:6px;flex:0 0 100%}.say .bub{flex:1;font-family:"Gowun Dodum",sans-serif;font-size:var(--f2)}
+#roomsDesc.say{flex:0 0 auto;align-items:center;margin-bottom:10px!important}#roomsDesc .bub{background:var(--card);font-size:var(--f2);color:var(--ink2);line-height:1.55}#roomsDesc .bub::before{border-right-color:var(--card)}
+/* 돋보기 카드 */
+.mag{position:absolute;top:0;right:0;bottom:0;left:0;z-index:4;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -3px 14px rgba(20,34,38,.16);padding:8px 12px 8px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;animation:up .25s ease-out}
+.mag .mh{display:flex;align-items:center;gap:8px}.mag .mw{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.mag .mt{margin:0;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.mag .mt b{font-family:"Jua",sans-serif;font-weight:400;font-size:1.0625rem}
+.meter{display:inline-flex;align-items:center;gap:3px;font-size:var(--f3);color:var(--ink2);white-space:nowrap}
+.meter i{width:12px;height:12px;border-radius:50%;background:var(--line)}.meter i:first-of-type{margin-left:3px}
+.meter i.on{background:var(--tape)}.meter.hi i.on{background:var(--mint)}.meter.lo i.on{background:var(--coral)}
+.mag .mc{flex:1 1 auto;min-height:96px;max-height:min(64vw,320px);display:flex;gap:6px}
+.mag figure{position:relative;flex:1;margin:0;border-radius:10px;overflow:hidden;background:#E4E6E6}
+.mag canvas{display:block;width:100%;height:100%}
+.mag figcaption{position:absolute;left:4px;top:4px;font-size:var(--f3);background:rgba(255,255,255,.88);border-radius:6px;padding:0 6px}
+.mag figure+figure figcaption{background:var(--ink);color:#fff}.mag figcaption.o{background:rgba(255,255,255,.88);color:var(--ink)}.mag .mc{cursor:pointer}
+.mag .sneak{padding:0 2px}.mag .mnote{margin:0;font-size:var(--f3);color:var(--ink2);text-align:center}
+.mag .row{display:flex;gap:8px;margin-top:auto}.mag .row .btn{flex:1;height:48px}
+/* 속임 등급(올리기 전 확인) */
+.trick{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:14px;padding:10px 12px}
+.trick .gr{font-family:"Jua",sans-serif;font-size:2.75rem;line-height:1;width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff;background:var(--ink)}
+.trick .gr.S{background:linear-gradient(135deg,#F2A100,#FFD76A);color:#5A3A00}.trick .gr.A{background:var(--brick)}.trick .gr.B{background:var(--mint)}
+.trick p{margin:0;color:var(--ink)}.trick small{display:block;color:var(--ink2);font-size:var(--f3)}
+.bas{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.bas figure{margin:0;flex:0 0 auto;position:relative;display:flex;flex-direction:column;gap:2px}
+.bas img{width:64px;height:48px;border-radius:6px;display:block;object-fit:cover}
+.bas b{position:absolute;left:3px;top:3px;font-family:"Jua",sans-serif;font-weight:400;font-size:var(--f3);background:var(--brick);color:#fff;border-radius:9px;min-width:18px;text-align:center;line-height:18px}
 
 /* 랭킹 */
 .rank{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:10px 12px;margin-bottom:6px}
@@ -417,7 +481,7 @@ ul.odds{margin:0;padding-left:20px;font-size:var(--f2);line-height:1.6;color:var
 @keyframes pop2dn{from{opacity:0;transform:translate(-50%,2px) scale(.9)}}
 .finger{position:absolute;width:64px;height:64px;transform:translate(-50%,-50%);pointer-events:none;z-index:4}
 .finger::before,.finger::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;border-radius:50%;border:4px solid var(--tape);animation:ping 1.2s ease-out infinite}
-.finger::after{top:22px;right:22px;bottom:22px;left:22px;border:0;background:var(--tape);animation:none;box-shadow:0 0 0 3px #fff}
+.finger::after{animation:none;box-shadow:0 0 0 2px #fff,inset 0 0 0 2px #fff} /* 가운데 점 없이 고리만(하나는 가만히, 하나는 퍼짐): 고리 안 하자가 보이게 */
 @keyframes ping{from{transform:scale(.4);opacity:1}to{transform:scale(1.3);opacity:0}}
 /* 켜고 끄는 스위치 */
 .sw{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:var(--tap);border:0;border-radius:12px;background:var(--bg);padding:0 14px;font-size:var(--f1);text-align:left}
@@ -429,6 +493,7 @@ ul.odds{margin:0;padding-left:20px;font-size:var(--f2);line-height:1.6;color:var
 @media (max-width:360px){#play .stags .tape{padding:0 2px 1px;letter-spacing:-.5px}.floor{gap:8px}.floor .fn{width:44px}.floor .nm>span{font-size:var(--f3);letter-spacing:-.3px}}
 @media (orientation:landscape) and (max-height:520px) and (pointer:coarse){.rotate{display:flex}}
 [data-scr=play] .toast{bottom:calc(58px + var(--sab));font-size:var(--f2);padding:7px 14px}
+[data-scr=make] .toast{top:calc(var(--sat) + 8px);bottom:auto} /* 숨기기: 아래 돋보기 카드·교묘함 줄을 안 가리게 머리줄 위에 */
 /* v9 모션·아이템: 스쿼시 팝·날아가는 아이콘·콤보 테두리·남은 시간 비네트·펫·조준 모드·새 도구 연출 */
 .fxpop{animation:fxpop .42s ease-out}
 @keyframes fxpop{0%{scale:1}25%{scale:1.28 .78}50%{scale:.88 1.14}72%{scale:1.06 .96}100%{scale:1}}
@@ -548,6 +613,57 @@ img.mi,svg.mi{background:none}
 .spark .mi{position:relative;width:100%;height:100%;filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #FFE066);animation:twinkle .6s ease-in-out infinite alternate}
 @keyframes sparkin{from{transform:scale(0) rotate(-40deg)}}
 @keyframes twinkle{to{transform:scale(1.13) rotate(6deg);opacity:.85}}
+/* v11 카드 묶음(인트로·하자 모양·게임 지도·처음 설명·게임 방법): 옆으로 넘기기는 CSS scroll-snap, 버튼 줄은 아래에 붙는다 */
+.deck{display:flex;flex-direction:column;gap:12px}
+.dtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.dtrack::-webkit-scrollbar{display:none}
+.dcard{flex:0 0 100%;min-width:0;max-width:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;gap:10px;padding:4px;overflow:hidden}
+.dcard>p,.dli p{margin:0;color:var(--ink);font-size:var(--f1);line-height:1.5}
+.dcard h3{font-size:1.5rem}
+.dhd{display:flex;align-items:center;gap:10px}.dhd>h3,.dhd>.bub{flex:1;min-width:0}
+.masc{width:64px;height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}.masc img{width:100%;height:100%;object-fit:contain}
+.masc .ic{width:48px;height:48px;border-radius:50%;background:var(--mintBg);color:#0E5C4E}.masc .ic.r{background:var(--brickBg);color:#6E2A1B}.masc .ic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ddots{display:flex;justify-content:center;align-items:center;gap:6px;min-height:10px;font-size:var(--f3);color:var(--ink2);font-family:"Jua",sans-serif}
+.ddots i{width:8px;height:8px;border-radius:4px;background:var(--line);transition:width .2s}.ddots i.on{width:22px;background:var(--ink)}
+.deck>.row{position:sticky;bottom:0;background:var(--card);padding-top:4px;box-shadow:0 40px 0 var(--card)}.deck>.row .btn{height:52px}
+.dtabs{padding-bottom:2px}
+/* 인트로: 위 모델하우스 · 아래 우리 집 (게임과 같은 이름표), 아래 그림의 다른 곳이 반짝 */
+.duo{display:flex;flex-direction:column;gap:4px;width:min(100%,260px,max(160px,calc(54vh - 200px)));align-self:center}.dtabs~.dtrack .duo{width:min(100%,260px,max(150px,calc(54vh - 250px)))} /* 짧은 폰에서도 버튼까지 한 화면에 (설명서는 칸 줄만큼 더 작게) */
+.duo figure{position:relative;margin:0;border-radius:6px;overflow:hidden;background:#E4E6E6}.duo img{display:block;width:100%;aspect-ratio:var(--ar)}
+.duo .tg{position:absolute;transform:translate(-50%,2px) rotate(-3deg);font-size:var(--f3);padding:0 8px 1px;white-space:nowrap}
+/* 하자 모양: 한 줄에 [원래 ▸ 하자] 조각 + 이름 */
+.shp{display:flex;flex-direction:column;gap:6px}
+.shp figure{margin:0;display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:12px;padding:5px 8px 5px 5px}
+.shp .pr{flex:0 0 64%;display:flex;align-items:center;gap:3px}.shp .pr img{flex:1 1 0;width:0;min-width:0;aspect-ratio:4/3;border-radius:8px;display:block;object-fit:cover}
+.shp .pr img+i+img{box-shadow:0 0 0 2.5px var(--brick)}.shp .pr i{flex:0 0 auto;width:0;height:0;border:5px solid transparent;border-right:0;border-left:6px solid var(--ink2)}
+.shp .pr .ic{margin:0 auto}
+.shp figcaption{flex:1;min-width:0;font-family:"Jua",sans-serif;font-size:1.0625rem;color:var(--ink);line-height:1.25}.shp figcaption small{display:block;font-family:"Gowun Dodum",sans-serif;font-size:var(--f3);color:var(--ink2)} /* 게임 안 이름(테이프·숨기기 칩)과 짝 */
+.dleg{margin:0;text-align:center;font-size:var(--f2);color:var(--ink2)}.dleg b{font-weight:400;font-family:"Jua",sans-serif;color:var(--ink)}.dleg b+b{color:var(--brick)}
+/* 게임 지도: 단지 10곳 · 층 줄 · 특수층·준공 검사 · 오늘의 집·내 집 */
+.cmx{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.cmx span{position:relative;border-radius:6px;aspect-ratio:var(--ar);background:#E4E6E6 center/cover}.cmx b{position:absolute;left:4px;top:1px;font-family:"Jua",sans-serif;font-weight:400;font-size:var(--f2);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.fls{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.fls i{font-style:normal;height:30px;border-radius:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:"Jua",sans-serif;font-size:var(--f2);color:var(--ink2)}
+.fls i.k{background:var(--ink);color:#fff}.fls i.g{background:linear-gradient(90deg,#F2A100,#FFD76A);color:#5A3A00}
+.lg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:var(--f2);color:var(--ink);line-height:1.4}
+.lg li{display:flex;align-items:center;gap:8px}.lg .tape{flex:0 0 auto;font-size:var(--f3);padding:0 8px}.lg .moon{width:22px;height:22px;flex:0 0 auto;margin:0 6px}
+.ext{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ext>span{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:6px;font-size:var(--f3);color:var(--ink2);line-height:1.3}.ext b{display:block;font-family:"Jua",sans-serif;font-weight:400;font-size:var(--f2);color:var(--ink)}
+.ext img{width:42px;height:42px;border-radius:8px;object-fit:cover;flex:0 0 auto}
+/* 처음 설명: 그림 한 줄 + 한 줄 글 */
+.dli{display:flex;flex-direction:column;gap:6px;background:var(--bg);border-radius:14px;padding:10px 12px}.dli.h{flex-direction:row;align-items:center;gap:12px;min-height:60px}.dli.h .icr{flex:0 0 64px;justify-content:center}.dli .stars{font-size:1.25rem}
+.icr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.icr img{width:48px;height:48px;object-fit:contain}.icr .ic{width:44px;height:44px}
+.icr .arr{width:0;height:0;border:6px solid transparent;border-right:0;border-left:8px solid var(--ink2)}
+.icr .hm{width:56px;height:56px;border-radius:10px;object-fit:cover}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.steps li{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:8px 12px;font-family:"Jua",sans-serif;font-size:1.0625rem}
+.steps .sn{width:28px;height:28px;border-radius:50%;background:var(--brick);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.steps .ic{flex:0 0 auto}.steps .meter{margin-left:auto}.steps .kb{font-weight:400;display:inline-block;border-radius:8px;padding:0 7px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line),0 2px 0 var(--line)} /* 버튼처럼 */
+.tapi{width:44px;height:44px;flex:0 0 auto;position:relative}.tapi::before{content:"";position:absolute;inset:6px;border-radius:50%;border:3px solid var(--tape)}.tapi::after{content:"";position:absolute;inset:16px;border-radius:50%;background:var(--tape)}
+.chal{display:flex;align-items:center;justify-content:center;gap:6px}.chal .masc{width:56px;height:56px}
+.chal code{font-family:inherit;font-size:var(--f3);background:#fff;border-radius:8px;padding:6px 8px;box-shadow:inset 0 0 0 1.5px var(--line);color:var(--ink2);white-space:nowrap}
+.rars{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.rars .rar{font-size:var(--f2);padding:2px 10px}
+.howb{position:relative}.howb .badge{position:absolute;top:-6px;right:0}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
 
@@ -567,7 +683,7 @@ img.mi,svg.mi{background:none}
   </div>
   <button class="homecard" id="homeCard" type="button" data-go="home"><span class="hc"><b>내 집 짓기</b></span></button>
   <button class="daily" id="goDaily" type="button"><span class="dh"><b>오늘의 집</b><span class="badge" id="dailyBadge">NEW</span><span class="ds" id="dailySub">매일 새 집이 열려요</span></span><span class="dots" id="dailyDots" role="img"></span></button>
-  <div class="mini"><button id="goMis" type="button">미션 <span class="badge" id="misBadge" hidden>NEW</span></button><button type="button" data-go="bag">가방 <span class="badge" id="bagBadge" hidden>0</span></button><button type="button" data-go="shop">상점</button><button id="goDex" type="button">도감</button><button id="setBtn" type="button">설정</button></div>
+  <div class="mini"><button id="goMis" type="button">미션 <span class="badge" id="misBadge" hidden>NEW</span></button><button type="button" data-go="bag">가방 <span class="badge" id="bagBadge" hidden>0</span></button><button type="button" data-go="shop">상점</button><button id="goDex" type="button">도감</button><button id="setBtn" type="button">설정</button><button class="howb" type="button" data-how>게임 방법<span class="badge" id="howNew" hidden>NEW</span></button></div>
   <p class="ai-note">그림(방·하자 질감·타이틀·내 집·아이콘)은 생성형 AI로 만든 뒤 편집했어요</p>
   <span class="pill coinp coinTL" id="coinPill">코인 0</span>
 </div>
@@ -623,14 +739,27 @@ img.mi,svg.mi{background:none}
 <!-- 하자 숨기기 편집 -->
 <div class="screen" id="make" hidden>
   <div class="top"><button class="icon" id="makeBack" type="button" aria-label="나가기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="disp" id="makeTitle">하자 숨기기</h2></div>
-  <div class="sub"><span class="pill" id="makeCount">0 / 7</span></div>
-  <div class="tray" id="tray"></div>
-  <div class="sneak"><span>대놓고</span><input type="range" id="sneak" min="1" max="5" step="1" value="3" aria-label="교묘함"><span>교묘하게</span><b class="sv" id="sneakV">3단계</b></div>
-  <div class="panes"><div class="pane" id="makePane"><span class="tape lab b" id="makeLab">우리 집 (누른 채로 원본 보기)</span><div class="zoomer"><canvas id="cvM"></canvas><canvas class="peekc" id="cvMo" hidden></canvas><div class="marks" id="makeMarks"></div></div></div></div>
-  <div class="pins" id="pins"></div>
-  <div class="tools">
-    <button class="btn w" id="undoBtn" type="button">되돌리기</button>
-    <button class="btn r" id="pubBtn" type="button" disabled>올리기</button>
+  <div class="panes"><div class="pane" id="makePane"><span class="tape lab b" id="makeLab">우리 집 · 꾹 누르면 원본</span><span class="tape lab b labr" id="makeLabR" hidden>우리 집</span><div class="zoomer"><canvas id="cvM"></canvas><canvas class="peekc" id="cvMo" hidden></canvas><div class="marks" id="makeMarks"></div></div>
+    <div class="cmp" id="cmpH" hidden><i></i><b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg></b></div></div></div>
+  <div class="dock">
+    <div class="tray" id="tray"></div>
+    <div class="sneak"><span>티 나게</span><input type="range" id="sneak" min="1" max="5" step="1" value="3" aria-label="다음 하자 감쪽같이 단계"><span>감쪽같이</span><b class="sv" id="sneakV">3단계</b></div>
+    <div class="pins" id="pins"></div>
+    <div class="tools hide">
+      <button class="btn w" id="undoBtn" type="button" aria-label="되돌리기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+      <button class="btn w" id="mzBtn" type="button" aria-pressed="false">확대</button>
+      <button class="btn w" id="cmpBtn" type="button" aria-pressed="false">비교</button>
+      <button class="btn w" id="blinkBtn" type="button" aria-label="깜빡 비교 (누르고 있기)">깜빡</button>
+      <button class="btn r" id="pubBtn" type="button" disabled>올리기</button>
+    </div>
+    <!-- 돋보기 카드: 놓은 하자 하나를 [원본|우리 집] 확대 조각·감쪽같음·교묘함으로 다듬는다. 그림을 가리지 않게 아래 칸(dock)만 덮는다 -->
+    <div class="mag" id="mag" hidden role="dialog" aria-label="숨긴 하자 다듬기">
+      <div class="mh"><span class="rc" id="magRc"></span><div class="mw"><p class="bub" id="magSay"></p><p class="mt"><b id="magName"></b><span class="meter" id="magMeter"></span></p></div></div>
+      <div class="mc"><figure><canvas id="magA"></canvas><figcaption>모델하우스</figcaption></figure><figure><canvas id="magB"></canvas><figcaption id="magBc">우리 집</figcaption></figure></div>
+      <div class="sneak" id="magS"><span>티 나게</span><input type="range" id="magD" min="1" max="5" step="1" value="3" aria-label="이 하자 감쪽같이 단계"><span>감쪽같이</span><b class="sv" id="magDV">3단계</b></div>
+      <p class="mnote" id="magNote"></p>
+      <div class="row"><button class="btn w" type="button" data-mag="del">지우기</button><button class="btn r" type="button" data-mag="ok">좋아요</button></div>
+    </div>
   </div>
 </div>
 
@@ -812,7 +941,7 @@ const sfx = {
   clear(){ [523, 659, 784, 1046].forEach((f, i) => tone(f, .22, 'triangle', .18, i * .09)); },
   hint(){ tone(880, .3, 'sine', .15, 0, 1.5); },
   tap(){ tone(520, .04, 'sine', .08); },
-  place(){ tone(300, .08, 'square', .09); tone(220, .12, 'square', .07, .06); },
+  roll(){ noise(.18, .22, 'bandpass', 700); noise(.13, .15, 'bandpass', 1700, .07); tone(1320, .07, 'sine', .07, .15, 1.4); }, // 숨기기: 롤러 '쓱' + '뿅'
   evil(){ [392, 370, 349, 330].forEach((f, i) => tone(f, .16, 'square', .08, i * .1)); },
   tape(delay = 0){ noise(.04, .25, 'highpass', 2000, delay); tone(1200, .04, 'sine', .06, delay); },
   stamp(delay = 0){ tone(90, .18, 'sine', .45, delay); noise(.14, .35, 'lowpass', 450, delay); },
@@ -1376,10 +1505,11 @@ const ciName = (ci) => (CHAPTERS[ci].bonus ? '보너스 단지' : `${ci + 1}단�
 // 특수층: t = 시간 보너스(초). sheet = 처음 들어올 때 안내 (정전은 예전처럼 매번 안내)
 const TWIST = {
   dark:  { name:'정전', t:20 },
-  mirror:{ name:'거울', t:10, tip:'우리 집 그림이 좌우로 뒤집혀 있어요', sheet:['거울 점검', '우리 집이 거울에 비쳐 보여요', '아래 그림이 좌우로 뒤집혀 있어요. 모델하우스의 왼쪽이 우리 집에서는 오른쪽이에요. 뒤집힌 그림에서 다른 곳을 톡 누르세요. 시간은 10초 더 드려요.'] },
-  fog:   { name:'결로', t:15, tip:'손가락으로 문질러 김을 닦아요', sheet:['결로 점검', '유리에 김이 서렸어요', '그림 위를 손가락으로 문지르면 김이 닦여요. 닦은 곳은 천천히 다시 흐려져요. 누를 때는 문지르지 말고 톡 누르세요. 시간은 15초 더 드려요.'] },
-  memory:{ name:'기억', t:10, tip:'6초 동안 모델하우스를 기억해요', sheet:['기억 점검', '모델하우스를 잘 기억해요', '처음 6초만 모델하우스가 보이고 가려져요. 가림막을 누르면 판마다 3번까지 다시 볼 수 있어요. 기억을 떠올려 우리 집에서 다른 곳을 찾아요. 시간은 10초 더 드려요.'] },
-  ghost: { name:'유령', t:15, tip:'다른 곳이 스르르 나타났다 사라져요', sheet:['유령 점검', '하자가 유령처럼 숨바꼭질해요', '우리 집의 다른 곳이 스르르 나타났다 사라져요. 사라진 순간에도 그 자리를 누르면 찾은 거예요. 모델하우스는 그대로예요. 시간은 15초 더 드려요.'] },
+  // sheet: [꼬리표, 제목, 설명(초등 2~3학년 눈높이: 한 문장 25자 안팎), 꼼꼼이 표정]
+  mirror:{ name:'거울', t:10, tip:'우리 집 그림이 좌우로 뒤집혀 있어요', sheet:['거울 점검', '우리 집이 거울에 비쳤어요', '아래 그림이 좌우로 뒤집혔어요. 왼쪽에 있던 게 오른쪽에 있어요. 시간을 10초 더 줄게요.', 'wow'] },
+  fog:   { name:'김 서림', t:15, tip:'손가락으로 문질러 김을 닦아요', sheet:['김 서림 점검', '유리에 김이 서렸어요', '손가락으로 문지르면 김이 닦여요. 찾을 때는 톡 눌러요. 시간을 15초 더 줄게요.', 'oops'] },
+  memory:{ name:'기억', t:10, tip:'6초 동안 모델하우스를 기억해요', sheet:['기억 점검', '모델하우스를 잘 기억해요', '위 그림은 처음 6초만 보여요. 가림막을 누르면 3번 더 볼 수 있어요. 시간을 10초 더 줄게요.', 'hi'] },
+  ghost: { name:'유령', t:15, tip:'다른 곳이 스르르 나타났다 사라져요', sheet:['유령 점검', '하자가 숨바꼭질해요', '다른 곳이 나타났다 사라져요. 안 보일 때 그 자리를 눌러도 찾은 거예요. 시간을 15초 더 줄게요.', 'wow'] },
 };
 const TWIST_NAMES = Object.values(TWIST).map((t) => t.name).join('·');
 const BOSS_T = 15;
@@ -2035,30 +2165,32 @@ let cur = 'title';
 function show(id){
   cur = id; SCREENS.forEach((s) => ($(s).hidden = s !== id)); document.body.dataset.scr = id;
   ({ map:renderMap, feed:renderFeed, rooms:renderRooms, rank:renderRank, title:renderTitle, shop:renderShop, bag:renderBag, home:renderHome })[id]?.();
-  syncBack();
+  syncBack(); meet(id);
 }
 // 시트는 대화상자: 뒤 화면은 inert, 포커스는 첫 버튼으로, 닫으면 원래 자리로
-let sheetFrom = null;
+let sheetFrom = null, DECK = null; // DECK: 열린 카드 묶음 (deck)
 const setInert = (on) => document.querySelectorAll('.screen').forEach((el) => (el.inert = on));
 function sheet(html){
+  DECK = null; // 카드 묶음은 deck()이 시트를 띄운 뒤 다시 건다
   if ($('sheet').hidden) sheetFrom = document.activeElement;
   $('sheetIn').innerHTML = html;
   $('sheet').dataset.stamp = P?.equip.stamp || 'basic'; $('sheet').hidden = false; $('coach').hidden = true; setInert(true); syncBack();
   $('play').classList.toggle('covered', !!(G && !G.done)); // 판 도중 시트(쉬기·도구함 등)는 그림을 가린다. 결과·정답 보기는 안 가림
   $('sheetIn').querySelector('button')?.focus({ preventScroll:true });
 }
-function closeSheet(){ $('play').classList.remove('covered'); if ($('sheet').hidden) return; $('sheet').hidden = true; setInert(false); if (sheetFrom?.isConnected) sheetFrom.focus({ preventScroll:true }); sheetFrom = null; }
+function closeSheet(){ DECK = null; $('play').classList.remove('covered'); if ($('sheet').hidden) return; $('sheet').hidden = true; setInert(false); if (sheetFrom?.isConnected) sheetFrom.focus({ preventScroll:true }); sheetFrom = null; }
 document.addEventListener('click', (e) => { const n = e.target.closest('[data-go]'); if (!n) return; sfx.tap(); closeSheet(); stopGame(); show(n.dataset.go); });
 
 /* 뒤로가기: 기기 뒤로가기·‹ 버튼이 모두 onBack() 하나를 거친다. 소비했으면 true, 타이틀이면 false(= 앱 종료)
    웹에서는 history에 '지킴이' 항목을 하나만 두고 popstate로 받는다. [SDK] backEvent를 붙이면 PLAT.nativeBack=true로 pushState를 끄고 핸들러는 onBack()만 부른다 */
 function onBack(){
+  if (DECK) { deckEnd(); return true; } // 카드 묶음은 뒤로가기 = 건너뛰기 (튜토리얼은 그다음 단계로)
   if (!$('play').hidden) {
     if (G && !G.done) { if ($('sheet').hidden || !$('sheet').querySelector('[data-act="quit"]')) pauseSheet(); return true; }
     const to = G ? backOf(G.st) : lastSt ? backOf(lastSt) : 'title'; closeSheet(); stopGame(); show(to); return true;
   }
   if (!$('sheet').hidden) { closeSheet(); return true; }
-  if (cur === 'make') { M.items.length ? $('makeBack').click() : show('rooms'); return true; }
+  if (cur === 'make') { if (!$('mag').hidden) closeMag(); else M.items.length ? $('makeBack').click() : show('rooms'); return true; }
   if (cur !== 'title') { show('title'); return true; }
   return false;
 }
@@ -2083,6 +2215,7 @@ function renderTitle(){
   const nb = (P.boxes.box || 0) + (P.boxes.gold || 0); $('bagBadge').hidden = !nb; $('bagBadge').textContent = `상자 ${nb}`;
   const inc = income(); $('incBadge').hidden = !inc; $('incBadge').textContent = `수금 ${inc}`;
   $('mapProg').textContent = `레벨 ${frontier()} / ${LEVELS}`; $('mapNew').hidden = !ghostNew(); homeTitle();
+  $('howNew').hidden = !P.tut || !!P.seen.manual; // 튜토리얼을 v11 전에 끝낸 사용자: 'NEW 게임 방법' (열면 끝)
   const newer = allPuzzles().filter((p) => !p.sample && p.created > P.seenFeed && p.author !== me()).length; $('feedNew').hidden = !newer; $('feedNew').textContent = `새 집 ${newer}`;
   $('feedDesc').textContent = shared() ? '다른 사람이 숨긴 하자를 찾아요' : '연습 집·자유 점검으로 끝없이 찾아요';
   $('rankName').textContent = shared() ? '랭킹' : '내 기록';
@@ -2310,13 +2443,13 @@ async function startInner(st){
   if (st.mode === 'ugc') { G.fresh = !P.played[st.puzzle.id]; if (G.fresh) { P.played[st.puzzle.id] = 'start'; save(); } }
   light = { x:W / 2, y:H / 2 }; drawDark(); $('zoomBtn').hidden = G.tut || !featOn('zoom');
   // 시작 안내 시트는 닫을 때 go()로 '준비… 시작!'·새 기능 말풍선을 이어 간다 (G.needGo)
-  const darkP = st.dark ? '<p>화면을 누른 채 움직이면 불빛이 따라가요. 불빛은 손가락 조금 위에 떠요.<br>위 그림을 비추면 아래 그림도 같이 밝아져요. 불빛 안에서 다른 곳을 톡 누르세요. 시간은 20초 더 드려요.</p>' : '';
-  if (st.dark && st.mode !== 'ugc') { G.needGo = true; return sheet(`<span class="tape k" style="align-self:flex-start">정전 점검</span><h3 class="disp">불이 나갔어요. 손전등으로 찾아요</h3>
+  const darkP = st.dark ? '<p>화면을 누른 채 움직이면 불빛이 따라가요. 불빛 안에서 다른 곳을 톡 눌러요. 위 그림을 비추면 아래도 밝아져요. 시간을 20초 더 줄게요.</p>' : '';
+  if (st.dark && st.mode !== 'ugc') { G.needGo = true; return sheet(`<span class="tape k" style="align-self:flex-start">정전 점검</span>${dhd('bv', 'oops', '불이 꺼졌어요! 손전등으로 찾아요')}
     ${darkP}<button class="btn y" type="button" data-act="close">손전등 켜기</button>`); }
-  // 거울·결로·기억: 처음 들어온 층에서만 안내 시트, 그 뒤로는 시작할 때 한 줄
+  // 거울·결로·기억: 처음 들어온 층에서만 안내 시트(꼼꼼이), 그 뒤로는 시작할 때 한 줄
   const tw = st.twist && TWIST[st.twist];
   if (tw?.sheet && st.mode === 'camp') { if (!P.seen['tw_' + st.twist]) { P.seen['tw_' + st.twist] = 1; save(); G.needGo = true;
-    return sheet(`<span class="tape k" style="align-self:flex-start">${tw.sheet[0]}</span><h3 class="disp">${tw.sheet[1]}</h3><p>${tw.sheet[2]}</p><button class="btn y" type="button" data-act="close">점검 시작</button>`); }
+    return sheet(`<span class="tape k" style="align-self:flex-start">${tw.sheet[0]}</span>${dhd('bv', tw.sheet[3], tw.sheet[1])}<p>${tw.sheet[2]}</p><button class="btn y" type="button" data-act="close">점검 시작</button>`); }
     toast(tw.tip); }
   // 이웃 집·도전장이 정전 집이면 손전등 안내를 같은 시트에 붙인다 (도전자 기록이 가려지지 않게)
   const darkTape = st.dark ? '<span class="tape k">정전</span>' : '', darkLine = st.dark ? ' 불이 나간 집이라 손전등으로 찾아요.' : '';
@@ -2345,9 +2478,9 @@ function go(){
   const tip = featCoach() ? TIP_MS : 0, g = G, c = $('combo');
   if (RM() && !tip) return loop();
   G.paused = true;
-  setTimeout(() => { if (G !== g) return; if (RM()) { G.paused = false; return loop(); }
+  setTimeout(() => { if (G !== g || G.done) return; if (RM()) { G.paused = false; return loop(); }
     c.textContent = '준비… 시작!'; c.style.color = ''; c.classList.remove('go'); void c.offsetWidth; c.classList.add('go');
-    setTimeout(() => { if (G !== g) return; G.paused = false; loop(); }, 800); }, tip);
+    setTimeout(() => { if (G !== g || G.done) return; G.paused = false; loop(); }, 800); }, tip);
 }
 // 시트를 닫고 판으로: 시작 안내 시트였으면 '준비… 시작!'부터
 const resume = () => (G.needGo ? (G.needGo = false, go()) : loop());
@@ -2363,12 +2496,18 @@ function featCoach(){
   P.seen[f] = 1; if (f === 'tools') { P.inv.blaster = (P.inv.blaster || 0) + 1; invUi(); PLAT.log('gift_blaster'); }
   save(); coach(FEAT_TIP[f][1], $(FEAT_TIP[f][0]), TIP_MS + 800); return true;
 }
-// 튜토리얼: 정보 오버레이가 걷힌 뒤 첫 하자 위에 손가락, 가운데에 말풍선
+// 튜토리얼: 정보 오버레이가 걷힌 뒤 꼼꼼이 인트로 카드(처음 한 번) → 첫 하자 위에 손가락, 가운데에 말풍선
+// 찾으면 위 동그라미를 가리키며 '남은 n곳', 8초 못 찾으면 남은 곳 근처가 반짝(softTick), 틀리면 벌점 없이 알려 준다(tapAt)
 async function tutCoach(){
   const g = G; await PLAT.onReady(); if (G !== g || G.done) return;
-  const d = G.diffs[0], el = document.createElement('div'); el.className = 'finger'; el.id = 'finger';
+  if (!P.seen.intro) { const pics = await tutPics(); if (G !== g || G.done) return; return deck([introCard(pics)], { skip:'건너뛰기', end:'연습 시작!', seen:'intro', done:() => tutGo(g) }); }
+  tutGo(g);
+}
+function tutGo(g){
+  if (G !== g || G.done) return; G.lastFindEl = G.el;
+  const d = G.diffs.find((x) => DRAW[x.k]) || G.diffs[0], el = document.createElement('div'); el.className = 'finger'; el.id = 'finger';
   el.style.cssText = `left:${d.x / W * 100}%;top:${d.y / H * 100}%`; $('paneB').querySelector('.marks').appendChild(el);
-  coach('위아래 그림에서 다른 곳을 톡', $('paneB'), 0); loop();
+  coach('위아래 그림에서 다른 곳을 톡!', $('paneB'), 0); loop();
 }
 function tutStage(){ const s = stageOf(0, 1); return { ...s, mode:'tut', key:'tut', seed:hash('tut'), n:3, label:`연습 점검 · ${s.scene.name}` }; }
 // 9층: 두 그림 모두에 있는 '함정' 하나. 누르면 '이건 모델하우스에도 있어요' (golden 해시가 안 바뀌게 genItems 밖에서 따로 시드)
@@ -2433,7 +2572,7 @@ function found(i, hint){
   const cnt = (P.dex[d.k] || 0); if (!cnt) G.newDex.push(d.k); P.dex[d.k] = cnt + 1;
   if (hint) sfx.hint(); else sfx.find(G.combo);
   sfx.tape(.35); PLAT.haptic('tickMedium');
-  if (G.tut && G.found.size === 1) { $('finger')?.remove(); if (G.found.size < G.diffs.length) coach('잘했어요! 나머지도 찾아요', $('paneB'), 2500); }
+  if (G.tut && G.found.size < G.diffs.length) { $('finger')?.remove(); const n = G.diffs.length - G.found.size; coach(G.found.size === 1 ? `딩동댕! 테이프를 붙였어요. 남은 ${n}곳은 혼자 찾아봐요` : `잘했어요! 이제 ${n}곳 남았어요`, $('slots'), 3500, true); }
   if (!hint && G.combo >= 2 && !G.untimed) { G.left += 3; const c = $('combo'); c.textContent = `콤보 ${G.combo}번 · 3초 더`; c.style.color = comboCol(G.combo); c.classList.remove('go'); void c.offsetWidth; c.classList.add('go'); }
   if (G.found.size === G.diffs.length) { G.done = true; cancelAnimationFrame(raf); if (!G.untimed) $('timer').textContent = clock(G.shown = Math.max(0, Math.round(G.left))); const g = G; setTimeout(() => G === g && win(), 650); } // 머리줄 시계 = 결과 '남은 시간' (마지막 콤보 +3초 포함)
 }
@@ -2493,7 +2632,7 @@ function tapAt(pane, cx, cy){
   pane.appendChild(x2); setTimeout(() => x2.remove(), 650);
   pane.classList.remove('shake'); void pane.offsetWidth; pane.classList.add('shake');
   const pen = G.untimed ? '' : ' · 5초 줄었어요';
-  toast(G.tut ? '여긴 똑같아요, 괜찮아요' : spam ? '천천히 봐요' : trap ? `이건 모델하우스에도 있어요${pen}` : !pen || P.seen.miss ? `여긴 똑같아요${pen}` : '여긴 똑같아요. 잘못 누르면 5초 줄어요');
+  toast(G.tut ? '앗, 거긴 똑같아요. 진짜 판에서는 틀리면 시간이 줄어요' : spam ? '천천히 봐요' : trap ? `이건 모델하우스에도 있어요${pen}` : !pen || P.seen.miss ? `여긴 똑같아요${pen}` : '여긴 똑같아요. 잘못 누르면 5초 줄어요');
   if (pen && !P.seen.miss) { P.seen.miss = 1; save(); }
 }
 /* 살짝 힌트: 정답 대신 '이 근처'만 알려 준다. 판당 첫 번은 바로, 그 뒤로는 45초(노는 시간)마다. 감점 없음. 이웃 집에서는 못 쓴다 */
@@ -2504,7 +2643,7 @@ function softHint(free){
   const left = G.diffs.map((d, i) => i).filter((i) => !G.found.has(i)); if (!left.length) return;
   const d = G.diffs[left[Math.floor(Math.random() * left.length)]], R = W / 10, a = Math.random() * 6.283, j = Math.random() * .4 * R; // 원 반지름의 40%까지 흔든다: 하자는 늘 원 안
   const x = clamp(d.x + Math.cos(a) * j, 0, W), y = clamp(d.y + Math.sin(a) * j, 0, H);
-  ['paneA', 'paneB'].forEach((p, pi) => { const h = document.createElement('div'); h.className = 'hintring'; h.style.cssText = `left:${mx(x, pi) / W * 100}%;top:${y / H * 100}%;width:20%;height:${20 * W / H}%`; $(p).querySelector('.marks').appendChild(h); setTimeout(() => h.remove(), 2000); });
+  ['paneA', 'paneB'].forEach((p, pi) => { const h = document.createElement('div'); h.className = 'hintring'; h.style.cssText = `left:${mx(x, pi) / W * 100}%;top:${y / H * 100}%;width:20%;height:${20 * W / H}%`; $(p).querySelector('.marks').appendChild(h); setTimeout(() => h.remove(), G.tut ? 5000 : 2000); });
   if (!free) G.softAt = G.el;
   $('hintBtn').classList.remove('nudge'); sfx.hint(); PLAT.haptic('tickWeak'); PLAT.log('soft_hint', { free:free ? 1 : 0 });
 }
@@ -2519,6 +2658,8 @@ function softTry(){
 function softTick(){
   const b = $('hintBtn'), w = G.softAt == null ? 0 : softWait(), pct = w ? Math.floor((1 - w / SOFT_CD) * 100) : -1;
   if (pct !== G.gauge) { G.gauge = pct; b.style.background = pct < 0 ? '' : `conic-gradient(var(--mintBg) ${pct}%, var(--card) 0)`; }
+  // 연습 판: 첫 곳을 찾은 뒤 8초 동안 못 찾으면 남은 곳 근처가 살짝 반짝 (8초마다)
+  if (G.tut) { if (G.found.size && playing() && G.el - Math.max(G.lastFindEl, G.tutHintAt || 0) > 8) { G.tutHintAt = G.el; softHint(true); toast('반짝이는 동그라미 안을 잘 봐요'); } return; }
   if (!softOk()) return;
   const stuck = G.el - G.lastFindEl;
   if (worn('goldlens') && !G.lensDone && stuck > 20) { G.lensDone = true; softHint(true); toast('황금 돋보기가 살짝 알려 줘요'); }
@@ -3157,15 +3298,17 @@ function bragText(){
     `⏱ ${Math.round(G.el)}초 · 헛손질 ${G.wrong}번${P.daily.streak > 1 ? ` · 🔥 ${P.daily.streak}일 연속` : ''}`,
     "토스에서 '숨은 하자 찾기'로 같은 집에 도전해 봐요"].join('\n');
 }
-// 튜토리얼 끝: 공구 상자 1개(ECON.tutBox, 1회)를 주고 여는 연출로, 그다음 처음 화면
+// 튜토리얼 끝: 보상(공구 상자 ECON.tutBox·흙)을 먼저 넣어 저장하고, 하자 모양 카드 3장 + 게임 지도 1장을 넘긴 뒤 상자 여는 결과 시트로
+// 결과는 G.resultHtml에 먼저 둔다(카드 중에 뒤로가기·앱을 꺼도 보상은 그대로). v11·설명서는 본 것으로 → 처음 만날 때 설명이 켜지고 'NEW 게임 방법' 배지는 안 뜬다
 function tutDone(){
-  P.tut = 1; P.boxes.box = (P.boxes.box || 0) + ECON.tutBox; matAdd('soil', ECON.tutSoil); save(); PLAT.log('tut_done'); confetti(); $('coach').hidden = true;
-  endSheet(`<div class="stamp">점검<br>완료</div><span class="tape" style="align-self:flex-start">첫 점검 끝</span>
+  P.tut = 1; P.seen.v11 = P.seen.manual = 1; P.boxes.box = (P.boxes.box || 0) + ECON.tutBox; matAdd('soil', ECON.tutSoil); save(); PLAT.log('tut_done'); confetti(); $('coach').hidden = true;
+  const g = G, html = G.resultHtml = `<div class="stamp">점검<br>완료</div><span class="tape" style="align-self:flex-start">첫 점검 끝</span>
     <h3 class="disp" style="padding-right:90px">다른 곳 ${G.diffs.length}곳을 다 찾았어요</h3>
-    <p>이렇게 모델하우스와 다른 곳을 찾으면 돼요. 잘못 누르면 시간이 줄어드니 잘 보고 눌러요. 첫 점검 선물이에요! 흙으로 내 집 첫 단계를 지어 봐요.</p>
+    <p>첫 점검 선물이에요! 흙으로 내 집 첫 단계를 지어 봐요.</p>
     <div class="gain"><span class="box">공구 상자 +${ECON.tutBox}</span></div>${matHtml()}
     <button class="btn y" type="button" data-openbox="box">공구 상자 열기</button>
-    <button class="btn" type="button" data-go="home">내 집 짓기</button>`);
+    <button class="btn" type="button" data-go="home">내 집 짓기</button>`;
+  tutPics().then((pics) => G === g && deck([...shapeCards(pics), mapCard()], { end:'첫 선물 받기', done:() => G === g && endSheet(html) }));
 }
 // 이웃 집 결과: 점수 기록 + 재밌어요/억지예요
 function ugcResult(all, quit){
@@ -3244,71 +3387,131 @@ $('sheet').addEventListener('click', (e) => {
   if (a === 'takecode') { const r = takeCode($('codeIn')?.value); toast(TAKE_MSG[r]); if (r === 'chal' || r === 'reply') { sfx.clear(); closeSheet(); feedSort = r === 'reply' ? 'mine' : 'new'; show('feed'); } return; }
 });
 $('sheet').addEventListener('click', (e) => { const b = e.target.closest('[data-send]'); if (!b) return; sfx.tap(); const p = NET.puzzles.find((x) => x.id === b.dataset.send && x.author === me()); if (p) sendChallenge(p); });
-$('sheet').addEventListener('click', (e) => { if (e.target !== $('sheet')) return; if (!G && $('make').hidden) return closeSheet(); if (playing()) { closeSheet(); resume(); } if (!$('make').hidden) closeSheet(); });
+$('sheet').addEventListener('click', (e) => { if (e.target !== $('sheet') || DECK) return; if (!G && $('make').hidden) return closeSheet(); if (playing()) { closeSheet(); resume(); } if (!$('make').hidden) closeSheet(); });
 
 
 /* ───────── 하자 숨기기 (시공팀) ───────── */
-const M = { scene:null, src:null, items:[], tool:'crack', trap:false, dark:false };
+// M.d: 다음에 놓을 하자의 교묘함(0~1) · M.sel: 돋보기 카드에 열린 하자 번호(-1 닫힘) · M.vs: 하자별 보인 정도(visScore. 올린 집 items에는 안 넣는다)
+// M.cmp·M.cx: 비교 손잡이 켜짐·위치(판 너비 %) · M.peek·M.blink: 꾹 누르기·깜빡 비교로 원본 전체를 보이는 중
+const M = { scene:null, src:null, items:[], tool:'crack', trap:false, dark:false, d:.5, sel:-1, vs:new WeakMap(), top:new WeakSet(), cmp:false, cx:50, peek:false, blink:false };
+// 편집 그림 확대(1~4배): 판 화면 확대와 같은 꼴(translate %·scale, pan 범위 -(s-1)*100 ~ 0). 그림이 하나라 판 쪽 scale·pan과는 따로 둔다
+const MZ = { s:1, x:0, y:0 };
 const realItems = () => M.items.filter((it) => !it.trap);
+const ctxM = () => $('cvM').getContext('2d', { willReadFrequently:true });
+// 살금이(시공팀 너구리) 그림: game/icons/mascot_rc_{hi|wow|oops}.webp. 목록에 없거나 못 읽으면 롤러 아이콘
+const rcFb = () => `<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG_IC.camo}</svg></span>`;
+const rcPic = (f) => (ICON_HAS.has('mascot_rc_' + f) ? `<img src="icons/mascot_rc_${f}.webp" alt="" draggable="false" onerror="this.outerHTML=rcFb()">` : rcFb());
+// 꼼꼼이(점검 반장 비버): game/icons/mascot_bv_{hi|wow|oops}.webp. 없으면 돋보기 아이콘
+const bvFb = () => `<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG_IC.hint}</svg></span>`;
+const bvPic = (f) => (ICON_HAS.has('mascot_bv_' + f) ? `<img src="icons/mascot_bv_${f}.webp" alt="" draggable="false" onerror="this.outerHTML=bvFb()">` : bvFb());
+// 캐릭터 머리줄: 그림 + 제목 (who 'bv' 꼼꼼이 · 'rc' 살금이)
+const dhd = (who, f, title) => `<div class="dhd"><span class="masc">${who === 'rc' ? rcPic(f).replace('class="ic"', 'class="ic r"') : bvPic(f)}</span><h3 class="disp">${title}</h3></div>`;
+// 감쪽같음(0~1): 보인 정도를 종류별 기준 [lo, hi]로 로그 정규화 (hi 이상 0 = 대놓고, lo 이하 1 = 감쪽같음)
+// 기준값(v11): 방 110곳 × 자리(하자는 평평한 곳 8곳, 시공 실수는 물건 6개) × 교묘함 5단계에서 잰 visScore 분포(종류마다 860·660번).
+//   lo = 가장 교묘한 단계의 하위 25%(판정 최소 이상), hi = 가장 대놓고 단계의 상위 10%. 가는 선(균열 1~1.9·이음새 1.6~2.3)과
+//   번지는 얼룩(곰팡이 11~36)은 같은 '감쪽같음'이어도 점수가 열 배 달라 종류별로 잰다. 보통 자리에서 대놓고 ●●○○○ · 3단계 ●●●○○ · 교묘하게 ●●●●○,
+//   무늬·그늘진 자리를 고르면 ●●●●●. remove·flip·dup은 교묘함과 상관없는 연산이라 자리로만 갈린다(D_FIXED, 카드에서 교묘함 숨김).
+//   shift는 덜 밀수록(교묘할수록) 가장자리가 두 겹으로 보여 점수가 오히려 커진다(222자리 평균 L1 3.8 → L5 2.6) → 단계를 숨긴다
+const VIS_REF = { crack:[1, 1.9], stain:[8.1, 28.1], mold:[11.2, 36], bubble:[2.8, 11.8], hole:[1, 6.2], scratch:[2.9, 6.5], dent:[1.1, 3.5], paint:[4.5, 24.9],
+  web:[2.3, 4.5], cobweb:[2.5, 8], drip:[5, 16.7], rust:[2.5, 8.9], dirt:[5.9, 18.9], chip:[1.8, 5.6], gap:[1.6, 2.3],
+  recolor:[10.4, 42.7], remove:[19.3, 29.2], flip:[28, 42.4], tilt:[19.4, 36.4], scale:[19, 35], shift:[22.3, 39.8], dup:[32.4, 47.8], dim:[10.7, 29] };
+const D_FIXED = ['remove', 'flip', 'dup', 'shift'];
+const sneakOf = (it) => { const [lo, hi] = VIS_REF[it.k] || [1, 10], sc = M.vs.get(it); return sc == null ? .5 : clamp(Math.log(hi / Math.max(sc, .01)) / Math.log(hi / lo), 0, 1); };
+const sneakDots = (it) => 1 + Math.round(sneakOf(it) * 4);
+const dotsOf = (n) => [1, 2, 3, 4, 5].map((i) => `<i${i <= n ? ' class="on"' : ''}></i>`).join('');
+// 속임 등급: 평균 감쪽같음 60점 + 서로 다른 종류(5가지면 만점) 20점 + 하자 수(3개 0 ~ 7개 만점) 20점. fool은 재미용 예상(10명 중)
+function trickGrade(its = realItems()){
+  const n = its.length; if (!n) return { pt:0, g:'C', fool:1, tip:'' };
+  const a = its.reduce((s, it) => s + sneakOf(it), 0) / n * 60, b = clamp((new Set(its.map((i) => i.k)).size - 1) / 4, 0, 1) * 20, c = clamp((n - 3) / 4, 0, 1) * 20, pt = Math.round(a + b + c);
+  const nx = pt >= 60 ? ['S', 80] : pt >= 40 ? ['A', 60] : ['B', 40];
+  const tip = pt >= 80 ? '' : `${nx[0]}까지 ${nx[1] - pt}점! ` + [[a / 60, '하자 번호를 눌러 더 감쪽같이 해 봐요'], [b / 20, '다른 종류를 섞으면 더 헷갈려요'], [c / 20, '하자를 하나 더 숨겨 봐요']].sort((x, y) => x[0] - y[0])[0][1];
+  return { pt, g:pt >= 80 ? 'S' : pt >= 60 ? 'A' : pt >= 40 ? 'B' : 'C', fool:clamp(Math.round(pt / 10), 1, 9), tip };
+}
+const inside = (it) => !(it.x - it.s * .65 < 0 || it.y - it.s * .65 < 0 || it.x + it.s * .65 > W || it.y + it.s * .65 > H);
+const near = (it, skip = -1) => M.items.some((q, j) => j !== skip && Math.hypot(q.x - it.x, q.y - it.y) < (hitR(q) + hitR(it)) * .9);
+
 function renderRooms(){
   const inc = income();
-  $('roomsDesc').innerHTML = shared() ? '내가 시공팀이에요. 모델하우스와 다르게 하자를 3~7개 숨겨서 올리면, 점검관들이 못 찾을수록 <b style="color:var(--brick)">속임 점수</b>가 쌓여요.' : '내가 시공팀이에요. 모델하우스와 다르게 하자를 3~7개 숨겨 보세요. 숨긴 집은 이 기기에 저장돼요.';
+  $('roomsDesc').classList.add('say');
+  $('roomsDesc').innerHTML = `<span class="rc">${rcPic('hi')}</span><span class="bub">이번엔 내가 시공팀! 모델하우스와 다르게 하자를 3~7개 몰래 숨겨요. ${shared() ? '점검관이 못 찾을수록 <b style="color:var(--brick)">속임 점수</b>가 쌓여요.' : '숨긴 집은 친구에게 도전장으로 보낼 수 있어요.'}</span>`;
   document.querySelectorAll('.incbar').forEach((x) => x.remove());
   if (inc) $('roomGrid').insertAdjacentHTML('beforebegin', `<button class="btn y incbar" type="button" data-collect="" style="width:100%;margin-bottom:10px">내 집에서 속은 점검관들 · 수금하기 코인 +${inc}</button>`);
   $('roomGrid').innerHTML = DATA.scenes.map((s) => `<button type="button" data-room="${s.id}"><span class="th" style="background-image:url(scenes/th/${s.id}.jpg)"></span><b>${esc(s.name)}</b></button>`).join('');
 }
+async function makeOpen(id){
+  const img = await loadImg(id);
+  M.scene = sceneById(id); M.items = []; M.src = srcCanvas(img, $('cvMo')); M.sel = -1; M.cmp = M.peek = M.blink = false; M.cx = 50; $('mag').hidden = true;
+  $('sneak').value = Math.round(M.d * 4) + 1; $('sneakV').textContent = `${$('sneak').value}단계`;
+  show('make'); $('makeTitle').textContent = `${M.scene.name}에 숨기기`; mzTo(1); redrawMake(); fitMake();
+}
 $('roomGrid').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-room]'); if (!b) return; sfx.tap();
-  let img; try { img = await loadImg(b.dataset.room); } catch { return toast('그림을 못 불러왔어요. 다시 눌러 주세요'); }
-  M.scene = sceneById(b.dataset.room); M.items = []; M.src = srcCanvas(img, $('cvMo'));
-  show('make'); $('makeTitle').textContent = `${M.scene.name}에 숨기기`; renderTray(); redrawMake();
-  if (!store.get('makeHelp', false)) { store.set('makeHelp', true); sheet(`<span class="tape r" style="align-self:flex-start">시공팀 안내</span><h3 class="disp">모델하우스랑 몰래 다르게</h3>
-    <p>1. 위에서 하자나 시공 실수를 고르고<br>2. 그림을 톡 누르면 그 자리에 생겨요<br>3. 3~7개를 숨기고 올리면 끝<br><br>교묘하게 할수록 못 찾지만, 너무 억지면 "억지예요"를 받아 점수가 줄어요. 그림을 누른 채로 있으면 원본과 비교할 수 있어요.</p>
-    <button class="btn r" type="button" data-act="close">시공 시작</button>`); }
+  try { await makeOpen(b.dataset.room); } catch { return toast('그림을 못 불러왔어요. 다시 눌러 주세요'); }
+  // 처음 숨길 때 한 번: 살금이 카드 3장. 옛 안내 시트를 본 사람(makeHelp)은 둘째 장(비교·깜빡 새 조작)부터
+  if (!P.seen.f_make) { const old = store.get('makeHelp', false); store.set('makeHelp', true); deck(makeCards(), { seen:'f_make', end:'숨기기 시작!', at:old ? 1 : 0 }); }
 });
-// 트레이: [하자|시공 실수|함정] 세그먼트 + 2줄 칩. 탭 상태는 따로 두지 않고 M.trap·M.tool에서 읽는다
+// 트레이: [하자|시공 실수|함정] 세그먼트 + 2줄 그림 칩. 탭 상태는 따로 두지 않고 M.trap·M.tool에서 읽는다
 const traySeg = () => (M.trap ? 't' : isObjKind(M.tool) ? 'm' : 'd');
+const objMode = () => isObjKind(M.tool) && !M.trap;
 function renderTray(){
   const seg = traySeg(), sl = $('tray').querySelector('.kg')?.scrollLeft || 0;
-  const b = (k, mis) => { const lock = !unlockedKind(k); return `<button type="button" class="${mis ? 'mis' : ''}${lock ? ' lock' : ''}" data-tool="${k}" aria-pressed="${M.tool === k}">${KINDS[k].name}${lock ? ` · ${KINDS[k].price}` : ''}</button>`; };
+  const b = (k, mis) => { const lock = !unlockedKind(k); return `<button type="button" class="${mis ? 'mis' : ''}${lock ? ' lock' : ''}" data-tool="${k}" aria-pressed="${M.tool === k}">${icon(k)}${KINDS[k].name}${lock ? `<em class="lkp">${LOCK_SVG}${KINDS[k].price}</em>` : ''}</button>`; };
   $('tray').innerHTML = `<div class="seg" role="group" aria-label="숨길 종류">${[['d', '하자'], ['m', '시공 실수'], ['t', `함정 ${M.items.filter((i) => i.trap).length}/${P.unlock.trap2 ? 2 : 1}`]].map(([v, t]) => `<button type="button" data-seg="${v}" aria-pressed="${seg === v}">${t}</button>`).join('')}</div>
     <div class="kg${seg === 't' ? ' trap' : ''}">${(seg === 'm' ? MISTAKE_KINDS : DEFECT_KINDS).map((k) => b(k, seg === 'm')).join('')}</div>`;
   if (sl && seg === M.lastSeg) $('tray').querySelector('.kg').scrollLeft = sl; M.lastSeg = seg; // 하자를 놓을 때마다 다시 그려도 스크롤이 제자리
 }
-// 시공 실수를 고르면 바꿀 수 있는 물건을 1.5초 동안 점선으로 깜빡인다
-function flashObjs(){
-  $('makeMarks').querySelectorAll('.objhl').forEach((x) => x.remove());
-  $('makeMarks').insertAdjacentHTML('beforeend', M.scene.objs.map((o) => `<i class="objhl" style="left:${o[0] / W * 100}%;top:${o[1] / H * 100}%;width:${o[2] / W * 100}%;height:${o[3] / H * 100}%"></i>`).join(''));
-  clearTimeout(flashObjs.t); flashObjs.t = setTimeout(() => $('makeMarks').querySelectorAll('.objhl').forEach((x) => x.remove()), 1500);
-}
+// 시공 실수를 고른 동안 바꿀 수 있는 물건은 옅은 점선으로 늘 보이고, 고른 순간 세 번 깜빡인다
+const flashObjs = () => $('makeMarks').querySelectorAll('.objhl').forEach((x) => x.classList.add('blink'));
 $('tray').addEventListener('click', (e) => {
   const sg = e.target.closest('[data-seg]');
   if (sg) { const v = sg.dataset.seg; if (v === traySeg()) return; sfx.tap(); M.trap = v === 't';
     if (v === 'm') M.tool = MISTAKE_KINDS.find(unlockedKind); else if (isObjKind(M.tool)) M.tool = M.trap ? 'stain' : 'crack';
-    renderTray(); if (v === 'm') { flashObjs(); return toast('점선으로 깜빡이는 물건을 눌러요'); }
+    refreshMakeUi(); if (v === 'm') { flashObjs(); return toast('점선 칸을 톡! 그 자리 물건이 슬쩍 바뀌어요'); }
     return toast(M.trap ? '함정: 두 그림 모두에 생겨요. 점검관이 누르면 5초가 깎여요' : `${KINDS[M.tool].name}: 벽이나 바닥을 눌러요`); }
   const b = e.target.closest('[data-tool]'); if (!b) return; sfx.tap(); const k = b.dataset.tool;
   if (!unlockedKind(k)) return sheet(`<span class="tape r" style="align-self:flex-start">시공 재료</span><h3 class="disp">${KINDS[k].name}</h3><p>${KINDS[k].tip}<br>지금 코인 ${P.coins}개.</p>
     <div class="row"><button class="btn w" type="button" data-act="close">닫기</button><button class="btn r" type="button" data-unlock="${k}" ${P.coins < KINDS[k].price ? 'disabled' : ''}>${KINDS[k].price}코인에 얻기</button></div>`);
   if (M.trap && isObjKind(k)) return toast('함정은 하자 스티커로만 만들 수 있어요');
-  M.tool = k; renderTray(); if (isObjKind(k)) flashObjs();
-  toast(k === 'dup' ? '하나 더: 복사할 물건을 눌러요. 옆자리에 하나 더 생겨요' : isObjKind(k) ? `${KINDS[k].name}: 물건을 눌러요` : `${KINDS[k].name}: 벽이나 바닥을 눌러요`);
+  M.tool = k; refreshMakeUi(); if (isObjKind(k)) flashObjs();
+  toast(k === 'dup' ? '하나 더: 복사할 물건을 눌러요. 옆자리에 하나 더 생겨요' : isObjKind(k) ? `${KINDS[k].name}: 점선 칸을 눌러요` : `${KINDS[k].name}: 벽이나 바닥을 눌러요`);
 });
 const redrawMake = () => { redrawCanvas(); refreshMakeUi(); };
-function redrawCanvas(){ const c = $('cvM').getContext('2d', { willReadFrequently:true }); c.drawImage(M.src, 0, 0); M.items.forEach((it) => applyItem(c, M.src, it)); }
-function refreshMakeUi(){
-  $('makeMarks').innerHTML = M.items.map((it, i) => `<span class="pin${it.trap ? ' trap' : ''}" style="left:${(it.x + hitR(it) * .8) / W * 100}%;top:${(it.y - hitR(it) * .8) / H * 100}%">${i + 1}</span>`).join('');
+// 원본 위에 숨긴 순서대로 다시 그린다. mi번째는 그리기 직전에 보인 정도를 재서(Infinity = 재고 되돌림) M.vs에 두고 돌려준다
+function redrawCanvas(mi = -1){
+  const c = ctxM(); c.drawImage(M.src, 0, 0);
+  M.items.forEach((it, i) => { if (i === mi) M.vs.set(it, applyItem(c, M.src, it, Infinity)); applyItem(c, M.src, it); });
+  return M.vs.get(M.items[mi]);
+}
+function refreshMarks(){
+  $('makeMarks').innerHTML = (objMode() && M.sel < 0 ? M.scene.objs.map((o) => `<i class="objhl" style="left:${o[0] / W * 100}%;top:${o[1] / H * 100}%;width:${o[2] / W * 100}%;height:${o[3] / H * 100}%"></i>`).join('') : '')
+    + M.items.map((it, i) => `<span class="pin${it.trap ? ' trap' : ''}${i === M.sel ? ' on' : ''}" data-i="${i}" style="left:${clamp((it.x + hitR(it) * 1.4) / W * 100, 3, 97)}%;top:${clamp((it.y - hitR(it) * 1.4) / H * 100, 3, 97)}%">${i + 1}</span>`).join(''); // 번호가 그림 밖으로 잘리지 않게
+  $('makeMarks').classList.toggle('sel', M.sel >= 0);
+}
+function refreshMakeUi(tray = true){
+  refreshMarks();
   const n = realItems().length;
-  $('pins').innerHTML = M.items.map((it, i) => { const t = `${i + 1} ${it.trap ? '함정 · ' : ''}${KINDS[it.k].name}`; return `<span class="pc">${t}<button type="button" data-del="${i}" aria-label="${t} 지우기">✕</button></span>`; }).join('')
-    + (n < 3 ? `<span class="need">하자를 3개 이상 숨기면 올릴 수 있어요${n ? ` · ${3 - n}개 더` : ''}</span>` : '');
-  $('makeCount').textContent = n < 3 ? `3개 이상 · 지금 ${n}개` : `7개까지 · 지금 ${n}개`;
-  $('pubBtn').disabled = realItems().length < 3;
-  renderTray();
+  // 숨긴 목록(번호를 누르면 돋보기 카드) + 살금이 한마디
+  const tip = !M.items.length ? (objMode() ? '점선 칸을 톡! 그 자리 물건이 슬쩍 바뀌어요' : '그림을 톡 누르면 하자가 생겨요. 두 손가락으로 벌리면 크게 보여요')
+    : n < 3 ? `${3 - n}개 더 숨기면 올릴 수 있어요. ${n === 1 ? '비교·깜빡을 누르면 원래 그림과 견줘요' : '번호를 누르면 다시 다듬어요'}` : '다 숨겼으면 올리기! 속임 등급을 알려 줄게요';
+  $('pins').innerHTML = `<span class="cnt">${n < 3 ? `하자를 3개 이상 숨기면 올릴 수 있어요 · 지금 ${n}개` : `7개까지 숨길 수 있어요 · 지금 ${n}개`}</span>`
+    + (M.items.length ? `<div class="pcs">${M.items.map((it, i) => { const t = `${i + 1} ${it.trap ? '함정 · ' : ''}${KINDS[it.k].name}`;
+      return `<span class="pc${it.trap ? ' trap' : ''}"><button type="button" class="pk" data-pick="${i}">${icon(it.k)}<span class="pn">${t}${it.trap ? '' : `<span class="dots" aria-label="감쪽같음 ${sneakDots(it)}/5">${dotsOf(sneakDots(it))}</span>`}</span></button><button type="button" data-del="${i}" aria-label="${t} 지우기">✕</button></span>`; }).join('')}</div>` : '')
+    + `<div class="say"><span class="rc">${rcPic(n >= 3 ? 'wow' : 'hi')}</span><p class="bub">${tip}</p></div>`;
+  $('pubBtn').disabled = n < 3;
+  if (tray) renderTray();
   $('undoBtn').disabled = !M.items.length;
+}
+// 놓을 때: 롤러 '쓱' + 그 자리 '뿅' 반짝
+function placeFx(x, y){
+  sfx.roll();
+  FX.burst(x, y, { n:12, col:['#FFFFFF', '#FFE08A', '#FFB21E', '#F8C9B8'], shape:'star', spd:3.2, g:.02, drag:.92, life:520, size:4 });
+  FX.ring(x, y, { r:30, col:'#FFFFFF', w:3, life:360 }); FX.text(x, y - 18, '뿅!', { size:20, col:'#FFFFFF', stroke:'#B4533A', rise:26, life:700 });
 }
 function placeAt(cx, cy){
   const r = $('cvM').getBoundingClientRect(), x = (cx - r.left) / r.width * W, y = (cy - r.top) / r.height * H;
-  const d = (+$('sneak').value - 1) / 4, k = M.tool, isObj = isObjKind(k);
+  const hit = M.items.findIndex((q) => Math.hypot(q.x - x, q.y - y) < hitR(q) * .8); // 숨긴 하자를 누르면 그 카드를 연다
+  if (hit >= 0) { sfx.tap(); return openMag(hit, false); }
+  const d = M.d, k = M.tool, isObj = isObjKind(k);
   if (M.trap) { if (M.items.filter((i) => i.trap).length >= (P.unlock.trap2 ? 2 : 1)) return toast(P.unlock.trap2 ? '함정은 2개까지예요' : '함정 2개는 공구 상점에서 얻을 수 있어요'); }
   else if (realItems().length >= 7) return toast('하자는 7개까지 숨길 수 있어요');
   let s, px = x, py = y;
@@ -3321,38 +3524,168 @@ function placeAt(cx, cy){
   if (M.trap) it.trap = 1;
   if (k === 'dup') { // 옆자리(좌·우 중 가운데 쪽)에 하나 더
     it.sx = it.x; it.sy = it.y; const dir = it.x > W / 2 ? -1 : 1; it.x = Math.round(it.x + dir * s * 1.05); it.y = Math.round(it.y + s * .1); }
-  if (it.x - s * .65 < 0 || it.y - s * .65 < 0 || it.x + s * .65 > W || it.y + s * .65 > H) return toast('그림 가장자리에서 조금 안쪽을 눌러요');
-  if (M.items.some((q) => Math.hypot(q.x - it.x, q.y - it.y) < (hitR(q) + hitR(it)) * .9)) return toast('다른 하자와 너무 가까워요');
-  const c = $('cvM').getContext('2d', { willReadFrequently:true });
-  const thr = visMin(k), sc = applyItem(c, M.src, it, thr);
-  if (sc < thr) { toast(isObj ? '여긴 바꿔도 티가 안 나요. 물건을 눌러 보세요' : '너무 안 보여요'); return; }
-  M.items.push(it); sfx.place(); PLAT.haptic('tickWeak'); refreshMakeUi();
+  if (!inside(it)) return toast('그림 가장자리에서 조금 안쪽을 눌러요');
+  if (near(it)) return toast('다른 하자와 너무 가까워요');
+  const thr = visMin(k), sc = applyItem(ctxM(), M.src, it, thr);
+  if (sc < thr) return toast(isObj ? '여긴 바꿔도 티가 안 나요. 물건을 눌러 보세요' : '너무 안 보여요. 조금 더 티 나게 해 봐요');
+  M.items.push(it); M.vs.set(it, sc); placeFx(cx, cy); PLAT.haptic('tickWeak'); refreshMakeUi(); openMag(M.items.length - 1, false);
+  // 비교 중 왼쪽(모델하우스 쪽)에 놓으면 큰 그림에 안 보이니 손잡이를 놓은 자리 왼쪽으로 옮긴다
+  if (M.cmp) { const r = $('makePane').getBoundingClientRect(), u = (cx - r.left) / r.width * 100; if (u < M.cx) { M.cx = clamp(u - 12, 2, 98); cmpPaint(); } }
+}
+
+/* 확대·비교: 두 손가락 1~4배, 두 번 톡 확대/원래대로, 확대 중 끌기 = 이동(10px 문턱), 한 번 톡 = 놓기 */
+function mzApply(){
+  const l = -(MZ.s - 1) * 100; MZ.x = clamp(MZ.x, l, 0); MZ.y = clamp(MZ.y, l, 0);
+  const z = $('makePane').querySelector('.zoomer'); z.style.transform = MZ.s > 1 ? `translate(${MZ.x}%,${MZ.y}%) scale(${MZ.s})` : ''; z.style.setProperty('--ps', 1 / MZ.s);
+  $('mzBtn').setAttribute('aria-pressed', MZ.s > 1); cmpPaint();
+}
+// mzTo: 그림의 (u, v)% 지점을 가운데로 · mzAt: 판 위 (p, q)% 지점을 손가락 밑에 그대로 두고
+const mzTo = (s, u = 50, v = 50) => { MZ.s = clamp(s, 1, 4); MZ.x = 50 - u * MZ.s; MZ.y = 50 - v * MZ.s; mzApply(); };
+const mzAt = (s, p, q) => { const u = (p - MZ.x) / MZ.s, v = (q - MZ.y) / MZ.s; MZ.s = clamp(s, 1, 4); MZ.x = p - u * MZ.s; MZ.y = q - v * MZ.s; mzApply(); };
+// 원본 겹쳐 보기: 꾹 누르기·깜빡이면 원본 전체, 비교 손잡이면 왼쪽만 (손잡이 위치를 확대된 그림 좌표로 바꿔 자른다)
+function cmpPaint(){
+  const o = $('cvMo'), full = M.peek || M.blink, u = clamp((M.cx - MZ.x) / MZ.s, 0, 100);
+  o.hidden = !full && !M.cmp; o.style.clipPath = !full && M.cmp ? `inset(0 ${100 - u}% 0 0)` : '';
+  $('makePane').classList.toggle('peek', full);
+  $('cmpH').hidden = !M.cmp || full; $('cmpH').style.left = `${M.cx}%`;
+  $('makeLab').textContent = full ? '모델하우스 (원본)' : M.cmp ? '모델하우스' : '우리 집 · 꾹 누르면 원본';
+  $('makeLabR').hidden = !M.cmp || full; $('cmpBtn').setAttribute('aria-pressed', M.cmp);
 }
 (() => {
-  const pane = $('makePane'); let st = null, peekT = 0;
-  pane.addEventListener('pointerdown', (e) => { clearTimeout(peekT); st = { x:e.clientX, y:e.clientY }; try { pane.setPointerCapture(e.pointerId); } catch {}
-    peekT = setTimeout(() => { if (!st) return; st.peek = true; pane.classList.add('peek'); $('cvMo').hidden = false; $('makeLab').textContent = '모델하우스 (원본)'; PLAT.haptic('tickWeak'); }, 600); }); // 천천히 누른 탭은 놓기로 (600ms 넘게 눌러야 원본 보기)
-  const end = (e, ok) => { clearTimeout(peekT); if (!st) return; if (st.peek) { pane.classList.remove('peek'); $('cvMo').hidden = true; $('makeLab').textContent = '우리 집 (누른 채로 원본 보기)'; } else if (ok && Math.hypot(e.clientX - st.x, e.clientY - st.y) < 10) placeAt(e.clientX, e.clientY); st = null; };
+  const pane = $('makePane'), PTS = new Map(); let st = null, pin = null, peekT = 0, last = null;
+  const at = (x, y) => { const r = pane.getBoundingClientRect(); return [(x - r.left) / r.width * 100, (y - r.top) / r.height * 100]; };
+  const mid = () => { const [a, b] = [...PTS.values()]; return [at((a[0] + b[0]) / 2, (a[1] + b[1]) / 2), Math.hypot(a[0] - b[0], a[1] - b[1])]; };
+  const peek = (on) => { M.peek = on; cmpPaint(); };
+  pane.addEventListener('pointerdown', (e) => {
+    PTS.set(e.pointerId, [e.clientX, e.clientY]); try { pane.setPointerCapture(e.pointerId); } catch {} clearTimeout(peekT);
+    if (PTS.size >= 2) { if (st?.peek) peek(false); st = null; const [[p, q], d] = mid(); pin = { d0:Math.max(20, d), s0:MZ.s, u:(p - MZ.x) / MZ.s, v:(q - MZ.y) / MZ.s }; return; }
+    st = { x:e.clientX, y:e.clientY, px:MZ.x, py:MZ.y, pin:e.target.closest?.('.pin')?.dataset.i };
+    peekT = setTimeout(() => { if (st && !st.moved) { st.peek = true; peek(true); PLAT.haptic('tickWeak'); } }, 600); // 천천히 누른 탭은 놓기로 (600ms 넘게 눌러야 원본 보기)
+  });
+  pane.addEventListener('pointermove', (e) => {
+    if (!PTS.has(e.pointerId)) return; PTS.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pin) { if (PTS.size < 2) return; const [[p, q], d] = mid(); MZ.s = clamp(pin.s0 * d / pin.d0, 1, 4); MZ.x = p - pin.u * MZ.s; MZ.y = q - pin.v * MZ.s; return mzApply(); }
+    if (!st) return; const dx = e.clientX - st.x, dy = e.clientY - st.y;
+    // 꾹(원본 보기) 중에 끌면: 확대했을 때는 원본 보기를 끄고 그 자리부터 이동
+    if (st.peek) { if (MZ.s > 1 && Math.hypot(dx, dy) > 10) { st.peek = false; peek(false); Object.assign(st, { x:e.clientX, y:e.clientY, px:MZ.x, py:MZ.y, moved:true }); } return; }
+    if (!st.moved && Math.hypot(dx, dy) > (MZ.s > 1 ? 10 : 24)) { st.moved = true; clearTimeout(peekT); } // 1배는 옮길 게 없어 미끄러진 톡도 놓기로
+    if (st.moved && MZ.s > 1) { MZ.x = st.px + dx / pane.clientWidth * 100; MZ.y = st.py + dy / pane.clientHeight * 100; mzApply(); }
+  });
+  const end = (e, ok) => {
+    if (!PTS.delete(e.pointerId)) return; clearTimeout(peekT);
+    if (pin) { if (PTS.size < 2) { pin = null; if (MZ.s < 1.1) mzTo(1); } return; }
+    const s = st; st = null; if (!s) return;
+    if (s.peek) return peek(false);
+    if (!ok || s.moved) return;
+    const now = performance.now(), x = e.clientX, y = e.clientY;
+    // 두 번 톡: 확대/원래대로 (첫 톡의 놓기는 0.28초 기다렸다가 하므로 취소된다)
+    if (last && now - last.t < 320 && Math.hypot(x - last.x, y - last.y) < 30) { clearTimeout(last.tm); last = null; sfx.tap(); const [p, q] = at(x, y); return mzAt(MZ.s > 1 ? 1 : 2.5, p, q); }
+    const tm = setTimeout(() => { if (last?.tm === tm) last = null; if (cur !== 'make' || !$('sheet').hidden) return; s.pin != null && M.items[+s.pin] ? (sfx.tap(), openMag(+s.pin, false)) : placeAt(x, y); }, 280);
+    last = { t:now, x, y, tm }; FX.ring(x, y, { r0:4, r:16, col:'#FFFFFF', w:2, life:260 }); // 놓기까지 0.28초: 눌린 자리를 바로 보여 준다
+  };
   pane.addEventListener('pointerup', (e) => end(e, true));
   pane.addEventListener('pointercancel', (e) => end(e, false));
+  // 비교 손잡이 끌기 (판의 놓기·이동과 섞이지 않게 여기서 멈춘다)
+  const h = $('cmpH'); let on = false;
+  const go = (e) => { const r = pane.getBoundingClientRect(); M.cx = clamp((e.clientX - r.left) / r.width * 100, 2, 98); cmpPaint(); };
+  h.addEventListener('pointerdown', (e) => { e.stopPropagation(); on = true; try { h.setPointerCapture(e.pointerId); } catch {} go(e); });
+  h.addEventListener('pointermove', (e) => { if (on) { e.stopPropagation(); go(e); } });
+  ['pointerup', 'pointercancel'].forEach((ev) => h.addEventListener(ev, (e) => { e.stopPropagation(); on = false; }));
+  // 깜빡 비교: 누르는 동안 0.4초마다 원본↔우리 집. 짧게 톡(또는 키보드)이면 세 번 왕복하고 멈춘다
+  const bb = $('blinkBtn'); let bt = 0, n = 0, cap = 0, t0 = 0;
+  // 깜빡이는 동안(bl) 번호 핀은 두 장면 모두 숨긴다
+  const stop = () => { clearInterval(bt); bt = 0; M.blink = false; bb.classList.remove('on'); pane.classList.remove('bl'); cmpPaint(); };
+  const run = (c) => { stop(); n = 0; cap = c; t0 = performance.now(); M.blink = true; bb.classList.add('on'); pane.classList.add('bl'); cmpPaint(); bt = setInterval(() => { M.blink = !M.blink; cmpPaint(); if (++n >= cap) stop(); }, 400); };
+  bb.addEventListener('pointerdown', (e) => { sfx.tap(); run(1e9); try { bb.setPointerCapture(e.pointerId); } catch {} });
+  bb.addEventListener('pointerup', () => { if (!bt) return; if (performance.now() - t0 < 450) cap = n + 5; else stop(); });
+  bb.addEventListener('pointercancel', stop);
+  bb.addEventListener('click', (e) => { if (!e.detail) run(5); });
+  bb.addEventListener('contextmenu', (e) => e.preventDefault());
 })();
-$('pins').addEventListener('click', (e) => { const b = e.target.closest('[data-del]'); if (!b) return; sfx.tap(); M.items.splice(+b.dataset.del, 1); redrawMake(); });
-$('undoBtn').onclick = () => { sfx.tap(); M.items.pop(); redrawMake(); };
-$('sneak').addEventListener('input', () => ($('sneakV').textContent = `${$('sneak').value}단계`));
-$('sneak').addEventListener('change', () => toast(`교묘함 ${$('sneak').value}단계 · 다음에 붙일 하자부터 적용돼요`));
+$('mzBtn').onclick = () => { sfx.tap(); if (MZ.s > 1) return mzTo(1); const it = M.items[M.sel]; mzTo(it ? 2.5 : 2, it ? it.x / W * 100 : 50, it ? it.y / H * 100 : 50); toast('끌어서 옮기고, 두 손가락으로 더 크게 봐요'); };
+$('cmpBtn').onclick = () => { sfx.tap(); M.cmp = !M.cmp; M.cx = 50; cmpPaint(); if (M.cmp) toast('손잡이를 좌우로 끌어요. 왼쪽이 모델하우스예요'); };
+
+/* 돋보기 카드: [원본|우리 집] 확대 조각 · 감쪽같음 · 그 하자만의 교묘함 */
+// 그림 c의 하자 자리를 캔버스 dst에 비율 그대로 (판 화면보다 약 3배. 큰 물건은 통째로 보이게 넓힌다)
+function cropTo(dst, c, it){
+  const k = dst.width / dst.height; let hh = Math.max(hitR(it) * 1.4, 75), hw = hh * k;
+  if (hw * 2 > W) { hw = W / 2; hh = hw / k; } if (hh * 2 > H) { hh = H / 2; hw = hh * k; }
+  const x0 = clamp(it.x - hw, 0, W - hw * 2), y0 = clamp(it.y - hh, 0, H - hh * 2), x = dst.getContext('2d');
+  x.drawImage(c, x0, y0, hw * 2, hh * 2, 0, 0, dst.width, dst.height);
+}
+function magDraw(){
+  const it = M.items[M.sel]; if (!it) return;
+  [['magA', M.src], ['magB', $('cvM')]].forEach(([id, c]) => { const cv = $(id), r = cv.getBoundingClientRect(), dp = Math.min(2, devicePixelRatio || 1);
+    const w = Math.round(r.width * dp) || 240, h = Math.round(r.height * dp) || 180; if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } cropTo(cv, c, it); });
+}
+// 살금이 말: 표정마다 몇 가지(하자마다 하나로 고정, 슬라이더를 움직여도 같은 표정이면 같은 말). 앗인데 올릴 단계가 없으면(5단계·단계 없는 실수) 자리를 바꾸라고
+const RC_SAY = { wow:['히히, 아무도 모를걸?', '감쪽같아요! 점검관이 헷갈리겠어요', '쉿, 여긴 아무도 몰라요'], hi:['음, 눈 밝은 점검관은 찾겠어요', '점검관이 한참 찾겠는걸요?'],
+  oops:['이건 바로 들키겠어요! 더 감쪽같이 해 봐요'], spot:['이건 바로 들키겠어요! 무늬나 그늘진 곳에 다시 놓아 봐요'], obj:['이건 바로 들키겠어요! 다른 물건에 해 봐요'] };
+const rcFace = (f) => { const rc = $('magRc'); if (rc.dataset.f !== f) { rc.dataset.f = f; rc.innerHTML = rcPic(f); FX.pop(rc); } };
+function magUpdate(){
+  const it = M.items[M.sel]; if (!it) return closeMag();
+  const n = sneakDots(it), face = it.trap || n >= 4 ? 'wow' : n <= 2 ? 'oops' : 'hi', fixed = D_FIXED.includes(it.k), v = Math.round(it.d * 4) + 1;
+  const say = it.trap ? ['히히, 누르면 시간이 깎여요!'] : RC_SAY[face === 'oops' && (fixed || v === 5) ? (DRAW[it.k] ? 'spot' : 'obj') : face];
+  rcFace(face); $('magSay').textContent = say[it.seed % say.length];
+  $('magName').textContent = `${M.sel + 1} ${it.trap ? '함정 · ' : ''}${KINDS[it.k].name}`;
+  const m = $('magMeter'); m.className = `meter${it.trap ? '' : n >= 4 ? ' hi' : n <= 2 ? ' lo' : ''}`;
+  m.innerHTML = it.trap ? '두 그림 모두에 생겨요' : `감쪽같음${dotsOf(n)}`; m.setAttribute('aria-label', it.trap ? '' : `감쪽같음 5칸 중 ${n}칸`);
+  if (n === 5 && !it.trap && !M.top.has(it)) { M.top.add(it); FX.pop(m); sfx.find(6); } // 감쪽같음 5칸을 처음 채우면 작은 축하
+  $('magS').hidden = fixed; $('magNote').textContent = `${fixed ? '이 실수는 단계가 없어요' : DRAW[it.k] ? '감쪽같을수록 작고 옅어져요' : '감쪽같을수록 살짝만 바뀌어요'} · 그림을 톡 하면 깜빡여요`;
+  $('magD').value = v; $('magDV').textContent = `${v}단계`;
+  magDraw();
+}
+function openMag(i, zoom){
+  const it = M.items[i]; if (!it) return; M.sel = i; sneakNo = null; $('mag').hidden = false; $('toast').style.opacity = 0; magUpdate(); refreshMarks(); // 남은 알림(고르기 안내 등)은 카드와 겹치지 않게 지운다
+  if (zoom) mzTo(Math.max(MZ.s, 2.5), it.x / W * 100, it.y / H * 100);
+}
+function closeMag(){ $('mag').hidden = true; if (M.sel < 0) return; M.sel = -1; refreshMarks(); }
+// 그 하자만 교묘함을 바꿔 전체를 다시 그린다(다음 하자 단계 M.d는 그대로). 그림 밖·겹침·판정 기준 미달이면 이전 값으로 되돌리고 살금이가 말한다
+// sneakNo: 거절된 단계. 엄지가 그쪽에 머물며 input이 잇달아 와도 다시 그리지 않고 바로 되돌린다(손을 떼면 지움)
+let sneakNo = null;
+function setSneak(v){
+  const i = M.sel, it = M.items[i], d = (v - 1) / 4; if (!it || d === it.d) return;
+  const v0 = Math.round(it.d * 4) + 1; if (sneakNo?.it === it && (sneakNo.v > v0 ? v >= sneakNo.v : v <= sneakNo.v)) { $('magD').value = v0; return; }
+  const old = { d:it.d, s:it.s }; it.d = d; if (DRAW[it.k]) it.s = Math.round(lerp(80, 46, d));
+  let why = !inside(it) ? '그림 가장자리라 더 크게 못 해요' : near(it, i) ? '더 크면 옆 하자와 겹쳐요' : '';
+  if (!why && redrawCanvas(i) < visMin(it.k)) { why = '너무 안 보여요. 조금 더 티 나게 해 봐요'; Object.assign(it, old); redrawCanvas(i); }
+  if (why) { Object.assign(it, old); sneakNo = { it, v }; magUpdate(); $('magSay').textContent = why; rcFace('oops'); return; }
+  sfx.tap(); sneakNo = null; magUpdate(); refreshMakeUi(false); // 고르기 칩은 그대로라 다시 안 그린다
+}
+$('magD').addEventListener('input', () => setSneak(+$('magD').value));
+$('magD').addEventListener('change', () => { sneakNo = null; });
+// 카드 조각을 톡: 오른쪽 조각이 0.4초마다 원본↔우리 집(세 번 왕복). 무엇이 바뀌었는지 그 자리에서 본다
+$('mag').querySelector('.mc').addEventListener('click', () => {
+  const it = M.items[M.sel]; if (!it || M.mb) return; sfx.tap(); let n = 0;
+  const f = () => { const c = $('magBc'); if (n >= 6 || M.items[M.sel] !== it || $('mag').hidden) { clearInterval(M.mb); M.mb = 0; c.textContent = '우리 집'; c.classList.remove('o'); return magDraw(); }
+    const o = n++ % 2 === 0; cropTo($('magB'), o ? M.src : $('cvM'), it); c.textContent = o ? '모델하우스' : '우리 집'; c.classList.toggle('o', o); };
+  f(); M.mb = setInterval(f, 400); });
+$('mag').addEventListener('click', (e) => { const a = e.target.closest('[data-mag]')?.dataset.mag; if (!a) return; sfx.tap();
+  if (a === 'del') { M.items.splice(M.sel, 1); closeMag(); return redrawMake(); }
+  closeMag(); });
+$('pins').addEventListener('click', (e) => { const d = e.target.closest('[data-del]'), p = e.target.closest('[data-pick]'); if (!d && !p) return; sfx.tap();
+  if (d) { M.items.splice(+d.dataset.del, 1); closeMag(); return redrawMake(); }
+  openMag(+p.dataset.pick, true); });
+$('undoBtn').onclick = () => { sfx.tap(); M.items.pop(); closeMag(); redrawMake(); };
+$('sneak').addEventListener('input', () => { M.d = ($('sneak').value - 1) / 4; $('sneakV').textContent = `${$('sneak').value}단계`; });
+$('sneak').addEventListener('change', () => toast(`다음 하자는 감쪽같이 ${$('sneak').value}단계 · 숨긴 하자는 번호를 눌러 바꿔요`));
 $('makeBack').onclick = () => {
-  if (!M.items.length) return show('rooms');
+  closeMag(); if (!M.items.length) return show('rooms');
   sheet(`<h3 class="disp">숨긴 하자를 버리고 나갈까요?</h3><div class="row"><button class="btn w" type="button" data-act="close">계속 숨기기</button><button class="btn r" type="button" data-go="rooms">버리고 나가기</button></div>`);
 };
+// 올리기 전 확인 줄의 전후 작은 그림
+const basPair = (it) => [M.src, $('cvM')].map((c) => { const t = document.createElement('canvas'); t.width = 128; t.height = 96; cropTo(t, c, it); return t.toDataURL('image/jpeg', .8); });
 $('pubBtn').onclick = () => {
   if (realItems().length < 3) return;
-  sfx.tap();
-  const kinds = realItems().map((it) => KINDS[it.k].name), traps = M.items.length - realItems().length;
-  sheet(`<span class="tape r" style="align-self:flex-start">올리기 전 확인</span><h3 class="disp">${esc(M.scene.name)} · 하자 ${realItems().length}개${traps ? ` · 함정 ${traps}개` : ''}</h3>
-    <div class="chips">${kinds.map((k) => `<span class="tape r">${k}</span>`).join('')}</div>
+  sfx.tap(); closeMag();
+  const its = realItems(), traps = M.items.length - its.length, g = trickGrade(its);
+  sheet(`<span class="tape r" style="align-self:flex-start">올리기 전 확인</span><h3 class="disp">${esc(M.scene.name)} · 하자 ${its.length}개${traps ? ` · 함정 ${traps}개` : ''}</h3>
+    <div class="trick"><span class="gr ${g.g}" aria-label="속임 등급 ${g.g}">${g.g}</span><p>속임 등급 ${g.g} · 점검관 10명 중 ${g.fool}명은 못 찾을 것 같아요<small>재미로 보는 예상이에요${g.tip ? ` · ${g.tip}` : ''}</small></p></div>
+    <div class="bas">${M.items.map((it, i) => { const [a, b] = basPair(it); return `<figure><b>${i + 1}</b><img src="${a}" alt=""><img src="${b}" alt="${i + 1}번 ${it.trap ? '함정 ' : ''}${KINDS[it.k].name}"></figure>`; }).join('')}</div>
     ${P.unlock.dark ? `<button class="btn w s" type="button" data-dark aria-pressed="${M.dark}">${M.dark ? '정전 집으로 올려요 (켜짐)' : '정전 집으로 올리기 (꺼짐)'}</button>` : '<p style="font-size:var(--f3)">정전 집으로 올리기는 공구 상점에서 얻을 수 있어요.</p>'}
-    <p>${shared() ? `올리면 다른 점검관들이 ${40 + realItems().length * 12}초 안에 찾아요. 못 찾은 하자 하나마다 속임 점수 10점.` : "이 기기의 '내가 숨긴 집'에 저장돼요."}</p>
+    <p>${shared() ? `올리면 다른 점검관들이 ${40 + its.length * 12}초 안에 찾아요. 못 찾은 하자 하나마다 속임 점수 10점.` : "이 기기의 '내가 숨긴 집'에 저장돼요."}</p>
     <div class="row"><button class="btn w" type="button" data-act="close">더 숨기기</button><button class="btn r" type="button" data-act="publish">${shared() ? '올리기' : '저장하기'}</button></div>`);
+  FX.pop($('sheetIn').querySelector('.gr')); if (g.g === 'S') sfx.clear();
 };
 async function publish(){
   // 두 번 누르거나, 올린 뒤 남은 확인 시트로 빈 집을 또 올리지 않게
@@ -3364,7 +3697,7 @@ async function publishInner(){
   const id = `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   const p = { id, ar:AR, author:me(), room:M.scene.id, items:M.items.slice(), n:realItems().length, created:Date.now(), week:weekKey(), dark:!!M.dark, camo:worn('camo') ? 1 : 0, gold:worn('goldbrick') ? 1 : 0 };
   try { await savePuzzle(p); } catch (e) { return toast(e?.code === 'quota_exceeded' ? '저장 공간이 가득 찼어요' : '올리지 못했어요. 다시 눌러 주세요'); }
-  sfx.evil(); confetti(); M.last = p; M.items = []; M.dark = false; M.trap = false; redrawMake();
+  sfx.evil(); confetti(); M.last = p; M.items = []; M.dark = false; M.trap = false; M.cmp = false; closeMag(); mzTo(1); redrawMake();
   const mis = track('publish'); if (mis.length) toast(mis.join(' · '));
   if (!shared()) return stampSheet(`<div class="stamp r">시공<br>완료</div><span class="tape r" style="align-self:flex-start">저장했어요</span><h3 class="disp" style="padding-right:90px">내가 숨긴 집에 넣어 뒀어요</h3>
     <p>도전장으로 보내면 친구가 이 집에서 하자를 찾아요.</p>
@@ -3375,6 +3708,132 @@ async function publishInner(){
     <button class="btn y" type="button" data-act="sendchal">친구에게 도전장 보내기</button>
     <div class="row"><button class="btn w" type="button" data-go="feed">이웃 집 보기</button><button class="btn r" type="button" data-go="rooms">하나 더 숨기기</button></div>`);
 }
+
+/* ───────── v11 카드 묶음: 인트로 · 하자 모양 · 게임 지도 · 처음 만날 때 설명 · 게임 방법 설명서 ─────────
+   deck(cards, o): 카드 HTML 배열을 옆으로 넘기는 시트로 띄운다(스와이프는 CSS scroll-snap, '다음'·점·건너뛰기). 설명서는 같은 카드를 칸(o.tabs)으로 묶어 다시 쓴다
+   o: done 끝·건너뛰기·뒤로가기 때 한 번 · seen 그때 P.seen에 남길 키 · end 마지막 장 버튼 · skip 건너뛰기 글자 · tabs [[칸 이름, 장 수]] · at 처음 장 */
+function deck(cards, o = {}){
+  const n = cards.length;
+  sheet(`<div class="deck">${o.tabs ? `<div class="tabs dtabs">${o.tabs.map(([t], i) => `<button type="button" data-dtab="${i}">${t}</button>`).join('')}</div>` : ''}
+    <div class="dtrack">${cards.map((c) => `<section class="dcard">${c}</section>`).join('')}</div>
+    <div class="ddots" aria-hidden="true">${n > 8 ? '<b></b>' : n > 1 ? cards.map(() => '<i></i>').join('') : ''}</div>
+    <div class="row">${n > 1 || o.tabs ? `<button class="btn w" type="button" data-deck="skip">${o.skip || '건너뛰기'}</button>` : ''}<button class="btn y" type="button" data-deck="next">다음</button></div></div>`);
+  DECK = { ...o, n, i:-1 }; $('sheetIn').querySelector('[data-deck="next"]').focus({ preventScroll:true });
+  // 손가락으로 넘겨 칸에 딱 멈추면 그 장으로. 스크롤이 칸 사이에서 멈췄으면(스냅이 안 걸린 웹뷰) 0.15초 뒤 가까운 장으로 맞춘다
+  const t = $('sheetIn').querySelector('.dtrack');
+  t.addEventListener('scroll', () => { const w = t.clientWidth, j = Math.round(t.scrollLeft / w); if (!w) return; if (Math.abs(t.scrollLeft - j * w) < 2) deckUi(j);
+    clearTimeout(t._s); t._s = setTimeout(() => { const k = Math.round(t.scrollLeft / w); if (Math.abs(t.scrollLeft - k * w) >= 2) t.scrollTo({ left:k * w, behavior:RM() ? 'auto' : 'smooth' }); }, 150); }, { passive:true });
+  deckGo(o.at || 0, true);
+}
+function deckGo(i, now){
+  const t = $('sheetIn').querySelector('.dtrack'); if (!DECK || !t) return;
+  i = clamp(i, 0, DECK.n - 1); deckUi(i); t.scrollTo({ left:i * t.clientWidth, behavior:now || RM() ? 'auto' : 'smooth' });
+}
+function deckUi(i){
+  const d = DECK, el = $('sheetIn'); if (!d || d.i === i) return; d.i = i; el.scrollTop = 0;
+  el.querySelectorAll('.ddots i').forEach((x, j) => x.classList.toggle('on', j === i)); const c = el.querySelector('.ddots b'); if (c) c.textContent = `${i + 1} / ${d.n}`;
+  el.querySelector('[data-deck="next"]').textContent = i === d.n - 1 ? d.end || '알겠어요' : '다음';
+  if (!d.tabs) return; let s = 0, k = 0; d.tabs.forEach(([, m], j) => { if (i >= s) k = j; s += m; });
+  el.querySelectorAll('[data-dtab]').forEach((x, j) => x.setAttribute('aria-pressed', j === k)); el.querySelector(`[data-dtab="${k}"]`).scrollIntoView({ inline:'center', block:'nearest' });
+}
+function deckEnd(){ const d = DECK; if (!d) return; DECK = null; if (d.seen) { P.seen[d.seen] = 1; save(); } closeSheet(); d.done?.(); }
+$('sheet').addEventListener('click', (e) => {
+  const a = e.target.closest('[data-deck]')?.dataset.deck, tb = e.target.closest('[data-dtab]'); if (!DECK || !a && !tb) return; sfx.tap();
+  if (tb) return deckGo(DECK.tabs.slice(0, +tb.dataset.dtab).reduce((s, x) => s + x[1], 0));
+  if (a === 'next' && DECK.i < DECK.n - 1) return deckGo(DECK.i + 1);
+  deckEnd();
+});
+
+// 카드 그림: 연습 방 그림을 잘라 실제 그리기 코드(DRAW·objOp·dupOp)로 [원래, 하자] 조각을 만든다. 한 번 만들어 재사용 (데칼이 다 오기 전이면 다음에 다시)
+// 못 만들면 null → 카드는 도감 아이콘(icon)으로
+let TUTP = null;
+const tutPics = () => TUTP || (TUTP = tutPicsMake().then((p) => { if (!p.full) TUTP = null; return p; }, (e) => { console.warn('[hj] 카드 그림', e); TUTP = null; return null; }));
+// 연습 방(1단지 1층 거실) 그림에서 보여 주기 좋은 자리: 맨 벽·마루 판자 위 [x, y, 조각 너비], 시공 실수 물건 [x, y, 크기] (dup은 옆자리 x까지). 방 그림을 바꾸면 여기도 다시 고른다
+// 마루는 러그와 받침 모서리 사이 좁은 띠라 조각을 작게(160x120) 자른다. remove는 시계를 넉넉히(130) 지워야 얼룩 같은 흔적이 안 남고, tilt는 액자 전체(140)를 돌려야 테두리가 두 겹으로 안 보인다
+const TUT_SPOT = { wall:[1040, 235, 200], floor:[500, 835, 160], tilt:[1008, 398, 140], remove:[703, 255, 130], recolor:[808, 497, 100], dup:[657, 830, 100, 552] };
+const TUT_SZ = { crack:105, scratch:80, hole:150, dent:100 }; // 하자 크기(조각 안에서 잘 보이게, 나머지 80)
+async function tutPicsMake(){
+  const src = srcCanvas(await loadImg(tutStage().scene.id)), nd = () => Object.keys(DECALS).length >= Object.keys(DECAL_LIST).length;
+  await new Promise((r) => { const t0 = Date.now(), f = () => (nd() || Date.now() - t0 > 1500 ? r() : setTimeout(f, 100)); f(); });
+  const out = { full:nd() }, T = TUT_SPOT;
+  // (cx, cy) 둘레 cw x ch 조각: a 원래, b 그릴 곳(읽기 잦음, 조각 좌표), x0·y0 조각의 그림 좌표 → [원래, 바뀐] JPEG
+  const pair = (cx, cy, cw, ch, fn) => { const x0 = clamp(Math.round(cx - cw / 2), 0, W - cw), y0 = clamp(Math.round(cy - ch / 2), 0, H - ch);
+    const mk = (rd) => { const c = document.createElement('canvas'); c.width = cw; c.height = ch; const x = c.getContext('2d', { willReadFrequently:rd }); x.drawImage(src, x0, y0, cw, ch, 0, 0, cw, ch); return x; };
+    const a = mk(false).canvas, b = mk(true); b.save(); fn(b, a, x0, y0); b.restore(); return [a, b.canvas].map((c) => url(c)); };
+  const url = (c, w = 240) => { const o = document.createElement('canvas'); o.width = w; o.height = Math.round(w * c.height / c.width); o.getContext('2d').drawImage(c, 0, 0, o.width, o.height); return o.toDataURL('image/jpeg', .85); };
+  [['crack', T.wall], ['stain', T.wall], ['mold', T.wall], ['hole', T.wall], ['cobweb', T.wall], ['scratch', T.floor], ['dent', T.floor], ['paint', T.floor]].forEach(([k, [x, y, w]]) => {
+    out[k] = pair(x, y, w, w * .75, (c, a, x0, y0) => DRAW[k](c, x - x0, y - y0, TUT_SZ[k] || 80, 1, rng(hash('tut' + k)))); });
+  ['tilt', 'remove', 'recolor'].forEach((k) => { const [x, y, s] = T[k]; out[k] = pair(x, y, 220, 165, (c, a, x0, y0) => objOp(c, a, k, x - x0, y - y0, s, 0, rng(hash('tut' + k)), 0)); });
+  { const [sx, sy, s, x] = T.dup; out.dup = pair((sx + x) / 2, sy, 260, 195, (c, a, x0, y0) => dupOp(c, a, { k:'dup', x:x - x0, y:sy + 10 - y0, s, sx:sx - x0, sy:sy - y0 }, 0)); }
+  // 인트로: 방 전체 [모델하우스, 연습 판의 하자 스티커 하나만 있는 우리 집] (연습 판에서 그 자리를 다시 만난다)
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d', { willReadFrequently:true }); x.drawImage(src, 0, 0);
+  const it = genItems(tutStage(), x, src).find((i) => DRAW[i.k]) || { k:'stain', x:T.wall[0], y:T.wall[1], s:150, d:0, seed:1 };
+  x.drawImage(src, 0, 0); out.roomA = url(c, 400); applyItem(x, src, it); out.roomB = url(c, 400); out.spot = [it.x / W * 100, it.y / H * 100];
+  return out;
+}
+const dtag = (t, c = '') => `<span class="tape${c}" style="align-self:flex-start">${t}</span>`;
+// 인트로(첫 실행 연습 판 앞 · 설명서 '기본')
+const introCard = (p) => { const th = `scenes/th/${tutStage().scene.id}.jpg`, [sx, sy] = p?.spot || [0, 0];
+  return `${dtag('점검 반장 꼼꼼이')}<div class="dhd"><span class="masc">${bvPic('hi')}</span><p class="bub">안녕! 나는 점검 반장 꼼꼼이예요</p></div>
+    <div class="duo"><figure><img src="${p?.roomA || th}" alt="모델하우스 그림"><span class="tape lab">모델하우스</span></figure>
+      <figure><img src="${p?.roomB || th}" alt="우리 집 그림"><span class="tape lab b">우리 집</span>${p ? `<i class="hintring" style="left:${sx}%;top:${sy}%;width:22%;height:${22 * W / H}%"></i><span class="tape tg" style="left:clamp(56px,${sx}%,calc(100% - 56px));top:${Math.min(sy + 13, 88)}%">여기가 달라요!</span>` : ''}</figure></div>
+    <p>위는 약속한 집, 아래는 진짜 지은 집이에요.<br>다른 곳이 바로 <b>하자</b>(잘못 지은 곳)예요.</p>`; };
+const X_SVG = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#F2553C" stroke-width="3.4" stroke-linecap="round"/></svg>';
+const dli = (pic, b, t, h) => `<div class="dli${h ? ' h' : ''}">${pic}<p><b>${b}</b> · ${t}</p></div>`; // h: 그림 옆에 글
+const icr = (ks) => `<span class="icr">${ks.map((k) => (ICON_HAS.has(k) ? `<img src="icons/${k}.webp" alt="">` : icon(k))).join('')}</span>`;
+const playCard = () => `${dtag('찾는 법')}${dhd('bv', 'wow', '다른 곳을 톡!')}
+  ${dli('<span class="icr"><span class="tape">긁힘</span></span>', '찾으면', '테이프가 붙어요', 1)}${dli(`<span class="icr">${X_SVG}</span>`, '틀리면', '시간이 5초 줄어요', 1)}
+  ${dli(`<span class="icr">${starRow('stars', 3)}</span>`, '별 3개', '빨리, 덜 틀리고 찾아요', 1)}${dli(icr(['hint']), '돋보기', '막히면 도와줘요', 1)}`;
+// 하자 모양 3장: 벽 · 바닥과 마감 · 물건(시공 실수). 아이 말로 한 줄씩
+const SHAPES = [['벽에 생기는 하자', 'oops', [['crack', '금이 갔어요'], ['stain', '물이 샌 얼룩'], ['mold', '곰팡이가 폈어요'], ['hole', '못 자국이 났어요']]],
+  ['바닥과 구석 하자', 'hi', [['scratch', '긁혔어요'], ['dent', '콕 찍혔어요'], ['paint', '페인트가 튀었어요'], ['cobweb', '거미줄이 있어요']]],
+  ['물건이 달라졌어요', 'wow', [['tilt', '비뚤어졌어요'], ['recolor', '색이 달라요'], ['remove', '없어졌어요'], ['dup', '하나 더 생겼어요']]]];
+const shapeCards = (p) => SHAPES.map(([t, f, ks], i) => `${dtag(`하자 모양 ${i + 1}/${SHAPES.length}`)}${dhd('bv', f, t)}<p class="dleg">왼쪽은 <b>원래</b>, 오른쪽은 <b>하자</b>예요</p>
+  <div class="shp">${ks.map(([k, nm]) => `<figure><div class="pr">${p?.[k] ? `<img src="${p[k][0]}" alt=""><i></i><img src="${p[k][1]}" alt="${nm}">` : icon(k)}</div><figcaption>${nm}<small>${KINDS[k].name}</small></figcaption></figure>`).join('')}</div>`);
+// 게임 지도: 단지 10곳 × 10층 · 5층 특수층 · 10층 준공 검사 · 보너스 유령 저택 · 오늘의 집·내 집
+const mapCard = () => `${dtag('게임 지도')}${dhd('bv', 'wow', `레벨 ${LEVELS}까지 올라가요`)}
+  <div class="cmx">${Array.from({ length:MAIN }, (_, i) => `<span style="background-image:url(scenes/th/${chapterScene(i, 1).id}.jpg)"><b>${i + 1}</b></span>`).join('')}</div>
+  <p>단지 ${MAIN}곳, 단지마다 ${FLOORS}층이에요.<br>빨리, 덜 틀리고 찾으면 ${starRow('stars', 3)}</p>
+  <div class="fls" aria-hidden="true">${Array.from({ length:FLOORS }, (_, i) => `<i class="${i === 4 ? 'k' : i === FLOORS - 1 ? 'g' : ''}">${i + 1}</i>`).join('')}</div>
+  <ul class="lg"><li><span class="tape k">5층</span>특별한 층 · ${TWIST_NAMES}</li><li><span class="tape g">${FLOORS}층</span>준공 검사 · 단지 마지막 큰 점검</li><li>${MOON_SVG}1단지 ${FLOORS}층을 깨면 보너스 유령 저택!</li></ul>
+  <div class="ext"><span><img src="scenes/th/${dailyStage().scene.id}.jpg" alt=""><span><b>오늘의 집</b>매일 새 집</span></span><span><img src="${homeTh(8)}" alt=""><span><b>내 집 짓기</b>재료로 집을 지어요</span></span></div>`;
+// 처음 만날 때 설명 (가방·하자 숨기기·이웃 집·내 집). 실제 아이콘 그림
+const bagCards = () => [
+  `${dtag('가방')}${dhd('bv', 'hi', '도구와 무기')}${dli(icr(['hint', 'time', 'thermal', 'drone']), '도구', '판에서 눌러 써요. 대신 찾아 주면 별이 하나 줄어요')}${dli(icr(['blaster', 'lasergun', 'grenade', 'megabomb']), '무기', '쏘고 던져서 찾아요. 써도 별 3개를 받을 수 있어요')}`,
+  `${dtag('가방')}${dhd('bv', 'wow', '펫과 찾기 효과')}${dli(icr(['dino', 'robodog', 'spacecat', 'haechi']), '펫', '옆에서 도와줘요')}${dli(icr(['fx_magic', 'fx_thunder', 'fx_rocket', 'fx_meteor']), '찾기 효과', '찾으면 펑 터져요')}`,
+  `${dtag('가방')}${dhd('bv', 'hi', '상자를 열면 나와요')}${dli('<span class="icr"><span class="crate mini"><i></i></span><span class="crate gold mini"><i></i></span></span>', '상자', '판을 깨면 가끔 나와요')}
+    ${dli(`<span class="rars">${Object.keys(RARITY).map((r) => `<span class="rar ${r}">${RARITY[r].name}</span>`).join('')}</span>`, '등급', '전설로 갈수록 잘 안 나와요')}<p>얼마나 잘 나오는지는 '확률 자세히'에서 봐요.</p>`];
+const makeCards = () => [
+  `${dtag('하자 숨기기', ' r')}${dhd('rc', 'hi', '이번엔 내가 시공팀!')}<p>나는 집 짓는 장난꾸러기 살금이예요.<br>몰래 하자를 숨겨서 친구를 속여요.</p><span class="masc" style="width:140px;height:140px;align-self:center">${rcPic('wow')}</span>`,
+  `${dtag('하자 숨기기', ' r')}${dhd('rc', 'hi', '이렇게 숨겨요')}<ol class="steps"><li><span class="sn">1</span>${icon('stain')}하자를 골라요</li><li><span class="sn">2</span><span class="tapi"></span>그림을 톡 눌러요</li>
+    <li><span class="sn">3</span>${icon('hint')}<span><b class="kb">비교</b> <b class="kb">깜빡</b>으로 원래 그림이랑 견줘 봐요</span></li></ol>
+    <p class="dleg">두 손가락으로 벌리면 크게 보여요 <span class="meter hi">감쪽같음${dotsOf(4)}</span></p>`,
+  `${dtag('하자 숨기기', ' r')}${dhd('rc', 'wow', '못 찾을수록 내 점수!')}<div class="trick"><span class="gr S">S</span><p>속임 등급 S<small>잘 숨길수록 등급이 올라요</small></p></div>
+    <p>${shared() ? '점검관이 못 찾을수록 속임 점수가 쌓여요.' : '숨긴 집은 친구에게 도전장으로 보내요.'}<br>3개부터 7개까지 숨길 수 있어요.</p>`];
+const feedCards = () => [
+  `${dtag('이웃 집 도전', ' k')}${dhd('bv', 'hi', '친구가 숨긴 집을 찾아요')}<div class="cmx" style="grid-template-columns:repeat(3,1fr)">${samplePuzzles().slice(0, 3).map((x) => `<span style="background-image:url(scenes/th/${x.room}.jpg)"></span>`).join('')}</div>
+    <p>${shared() ? '다른 사람이 숨긴 하자를 찾아요.' : "지금은 '연습 집'에서 찾아봐요."}<br>'자유 점검'은 새 하자가 끝없이 나와요.</p>`,
+  `${dtag('이웃 집 도전', ' k')}${dhd('rc', 'wow', '도전장 주고받기')}<div class="chal"><span class="masc">${rcPic('hi')}</span><span class="icr"><i class="arr"></i></span><code>HJ1.…</code><span class="icr"><i class="arr"></i></span><span class="masc">${bvPic('wow')}</span></div>
+    <p>내가 숨긴 집을 친구에게 보내요.<br>친구가 보낸 글을 꾹 눌러 복사하고, '도전장 받기'를 눌러요.</p>`];
+const homeCards = () => [
+  `${dtag('내 집 짓기', ' g')}${dhd('bv', 'wow', '판을 깨면 재료가 와요')}${icr(['mat_soil', 'mat_cement', 'mat_brick', 'mat_wood', 'mat_glass', 'mat_paint'])}<p>점검·오늘의 집·미션에서 모여요.</p>`,
+  `${dtag('내 집 짓기', ' g')}${dhd('bv', 'hi', '재료로 집을 지어요')}<span class="icr" style="justify-content:center">${[0, 3, 6, HOME_MAX].map((s) => `<img class="hm" src="${homeTh(s)}" alt="">`).join('<i class="arr"></i>')}</span><p>${HOME_MAX}단계를 다 지으면 미래의 집!</p>`,
+  `${dtag('내 집 짓기', ' g')}${dhd('bv', 'wow', '꾸미기도 모아요')}${icr(DECOS.slice(0, 5).map((d) => d[0]))}<p>단지 ${FLOORS}층을 처음 깨면 하나씩 열려요.</p>`];
+// 처음 만날 때: v11 튜토리얼을 끝낸 사람만(기존 사용자는 강제로 안 보여 주고 'NEW 게임 방법' 배지), 화면마다 한 번. 하자 숨기기는 처음 방을 고를 때(makeCards)
+const MEETS = { bag:bagCards, feed:feedCards, home:homeCards };
+function meet(id){ if (!MEETS[id] || !P?.seen.v11 || P.seen['f_' + id] || !$('sheet').hidden) return; deck(MEETS[id](), { seen:'f_' + id }); }
+// 게임 방법 설명서: 위 카드를 칸으로 묶어 다시 쓴다 (타이틀·설정)
+const HOW = [['기본', (p) => [introCard(p), playCard()]], ['하자 모양', shapeCards], ['레벨', () => [mapCard()]], ['아이템', bagCards], ['숨기기', makeCards], ['이웃 집', feedCards], ['내 집', homeCards]];
+let howBusy = false;
+async function howSheet(sec = 0){
+  if (howBusy) return; howBusy = true; P.seen.manual = 1; save(); $('howNew').hidden = true;
+  const at = cur, tm = setTimeout(() => toast('설명서를 펴는 중이에요…'), 250); let p;
+  try { p = await tutPics(); } finally { howBusy = false; clearTimeout(tm); }
+  if (cur !== at || !$('sheet').hidden && !$('sheetIn').querySelector('[data-how]')) return; // 기다리는 새 다른 화면·시트로 갔으면 안 띄운다 (설정 시트에서 연 것은 바꿔 띄운다)
+  const secs = HOW.map(([t, f]) => [t, f(p)]);
+  deck(secs.flatMap((s) => s[1]), { tabs:secs.map(([t, c]) => [t, c.length]), at:secs.slice(0, sec).reduce((a, s) => a + s[1].length, 0), skip:'닫기', end:'닫기' });
+}
+document.addEventListener('click', (e) => { if (!e.target.closest('[data-how]')) return; sfx.tap(); howSheet(); });
 
 /* ───────── 상자 열기 ───────── */
 function rollRarity(odds){ let r = Math.random() * 100; for (const [k, v] of Object.entries(odds)) { if ((r -= v) < 0) return k; } return 'c'; }
@@ -3743,7 +4202,7 @@ const SVG_IC = {
   dark:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>',
 };
 // 아이템 그림: game/icons/{key}.webp (build.py가 있는 키 목록을 넣는다). 목록에 없으면 SVG, 있는데 못 읽으면 onerror로 SVG
-const ICON_HAS = new Set(['blackhole','blaster','blink','camo','deco_arcade','deco_firefly','deco_fountain','deco_lantern','deco_parasol','deco_pumpkin','deco_rocket','deco_slide','deco_snowman','deco_sunflower','deco_treehouse','dino','dragon','drone','freeze','fx_laser','fx_magic','fx_meteor','fx_rocket','fx_seal','fx_thunder','ghostpet','goldbrick','goldlens','grenade','haechi','hint','hygro','lasergun','level','mat_brick','mat_cement','mat_chip','mat_core','mat_glass','mat_paint','mat_rebar','mat_seed','mat_soil','mat_solar','mat_tile','mat_wood','megabomb','nanobot','robodog','saber','scope','scroll','spacecat','staff','thermal','time','tmachine','ufo']);
+const ICON_HAS = new Set(['blackhole','blaster','blink','camo','deco_arcade','deco_firefly','deco_fountain','deco_lantern','deco_parasol','deco_pumpkin','deco_rocket','deco_slide','deco_snowman','deco_sunflower','deco_treehouse','dino','dragon','drone','freeze','fx_laser','fx_magic','fx_meteor','fx_rocket','fx_seal','fx_thunder','ghostpet','goldbrick','goldlens','grenade','haechi','hint','hygro','lasergun','level','mascot_bv_hi','mascot_bv_oops','mascot_bv_wow','mascot_rc_hi','mascot_rc_oops','mascot_rc_wow','mat_brick','mat_cement','mat_chip','mat_core','mat_glass','mat_paint','mat_rebar','mat_seed','mat_soil','mat_solar','mat_tile','mat_wood','megabomb','nanobot','robodog','saber','scope','scroll','spacecat','staff','thermal','time','tmachine','ufo']);
 const svgOf = (k) => SVG_IC[k] || SVG_IC[ITEMS[k]?.type] || SVG_IC.hint;
 // k: 하자·시공 실수·아이템·해금 키. cls: 바탕색(t 민트·m 벽돌)
 function icon(k, cls = 't'){
@@ -3872,6 +4331,7 @@ $('sheet').addEventListener('click', (e) => {
 function settingsSheet(){
   sheet(`<h3 class="disp">설정</h3>
     ${['muted', 'bgm', 'haptic', 'relax', 'big'].map(swBtn).join('')}
+    <button class="btn w s" type="button" data-how>게임 방법 보기</button>
     <div class="sec">정보</div>
     <p>기획·제작: 공간노트</p>
     <p><b style="color:var(--ink)">생성형 AI로 만든 것</b><br>방 그림 ${DATA.scenes.length}장, 하자 질감(균열·얼룩·곰팡이 같은 스티커), 타이틀 그림, 내 집 그림 ${HOME_STAGES.length}장, 도구·무기·펫·찾기 효과·재료·꾸미기 아이콘은 생성형 AI로 만든 뒤 사람이 편집했어요.</p>
@@ -3885,13 +4345,22 @@ $('setBtn').onclick = () => { sfx.tap(); settingsSheet(); };
 // 긴 폰(폭 100%인데 세로가 남음)의 점검 판은 남는 세로만큼 그림을 키우고 양옆을 조금 자른다.
 // 자르는 폭은 이번 판 하자(판정 반경 + 여유 30)가 전부 보이는 데까지, 한쪽 최대 그림 폭의 CROP
 const CROP = .1;
-function fit(){ document.querySelectorAll('.panes').forEach((b) => { if (!b.clientHeight) return;
+function fit(){ fitMake(); document.querySelectorAll('#play .panes').forEach((b) => { if (!b.clientHeight) return;
   const ps = b.querySelectorAll('.pane'), gap = parseFloat(getComputedStyle(b).rowGap) || 0, ph = (b.clientHeight - gap * (ps.length - 1)) / ps.length, w = Math.floor(Math.min(b.clientWidth, ph * W / H));
   const c = b.id === 'panes' && G && w === b.clientWidth ? clamp(Math.min(W * CROP, ...G.diffs.map((d) => Math.min(d.x, W - d.x) - d.r - 30)), 0, W * CROP) : 0;
   const h = Math.floor(Math.min(ph, w * H / (W - 2 * c))), zw = h * W / H;
   ps.forEach((p) => { p.style.width = `${w}px`; p.style.height = `${h}px`; const z = p.querySelector('.zoomer'); z.style.width = zw > w + .5 ? `${zw}px` : ''; z.style.left = zw > w + .5 ? `${(w - zw) / 2}px` : ''; }); }); }
+// 숨기기 그림(#make)은 폭 100%가 기본(아래 칸이 남은 높이를 쓴다). 짧은 화면이면 아래 칸(고르기·교묘함·목록 한 줄·도구)이 다 들어가게 그림을 줄여 가운데에.
+// #make .panes는 그림 높이를 따라가므로 지켜보지 않는다(보면 ResizeObserver 고리 오류). 화면 크기가 바뀔 때(body)와 방을 열 때 부른다
+function fitMake(){
+  const mk = $('make'), p = $('makePane'); if (mk.hidden) return;
+  const d = mk.querySelector('.dock'), cs = getComputedStyle(mk), tap = parseFloat(getComputedStyle(d).getPropertyValue('--tap')) || 48;
+  const need = [...d.children].reduce((a, x) => a + (x.id === 'mag' ? 0 : x.id === 'pins' ? tap + 32 : x.offsetHeight), 0);
+  const h = mk.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - mk.querySelector('.top').offsetHeight - need, pw = p.parentNode.clientWidth;
+  const w = Math.floor(clamp(h * W / H, pw * .6, pw)); p.style.width = w < pw ? `${w}px` : '';
+}
 new ResizeObserver(fit).observe(document.body);
-document.querySelectorAll('.panes').forEach((b) => new ResizeObserver(fit).observe(b));
+document.querySelectorAll('#play .panes').forEach((b) => new ResizeObserver(fit).observe(b));
 
 /* ───────── 안전망: 예상 못 한 오류에도 멈추지 않게 ───────── */
 let fatalAt = 0;
