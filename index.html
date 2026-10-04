@@ -915,15 +915,22 @@ async function copyText(t){
 /* ───────── 소리 (WebAudio 합성) ───────── */
 let AC = null;
 const ac = () => { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state !== 'running') AC.resume().catch(() => {}); return AC; };
-// 짧은 잡음 한 번(필터를 거친 흰 잡음, 끝으로 갈수록 작아짐): 테이프 '찍'·도장 '쾅'·공구함 '딸깍'의 질감
+// 짧은 잡음 한 번(필터를 거친 흰 잡음, 게인으로 끝으로 갈수록 작아짐): 테이프 '찍'·도장 '쾅'·공구함 '딸깍'의 질감
+// 잡음 버퍼는 1초짜리 하나를 만들어 두고 다시 쓴다(부를 때마다 만들면 첫 찾기에 끊김)
+let NOISE = null;
+function noiseBuf(){
+  if (NOISE && NOISE.sampleRate === AC.sampleRate) return NOISE;
+  const n = AC.sampleRate; NOISE = AC.createBuffer(1, n, n); const d = NOISE.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return NOISE;
+}
 function noise(dur, vol, type, freq, delay = 0){
   if (!P || P.set.muted) return;
   try {
-    ac(); const n = Math.max(1, Math.ceil(AC.sampleRate * dur)), buf = AC.createBuffer(1, n, AC.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
-    const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
-    s.buffer = buf; f.type = type; f.frequency.value = freq; g.gain.value = vol;
-    s.connect(f).connect(g).connect(AC.destination); s.start(AC.currentTime + delay);
+    ac(); const t = AC.currentTime + delay, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+    s.buffer = noiseBuf(); s.loop = dur > 1; f.type = type; f.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t); g.gain.linearRampToValueAtTime(0, t + dur);
+    s.connect(f).connect(g).connect(AC.destination); s.start(t, Math.random() * Math.max(0, 1 - dur), dur); // 시작 자리를 바꿔 매번 조금씩 다른 질감
   } catch {}
 }
 function tone(freq, dur = .12, type = 'sine', vol = .18, delay = 0, slide = 0){
@@ -948,6 +955,14 @@ const sfx = {
   stamp(delay = 0){ tone(90, .18, 'sine', .45, delay); noise(.14, .35, 'lowpass', 450, delay); },
   click(){ noise(.003, .4, 'bandpass', 3200); noise(.003, .35, 'bandpass', 2600, .06); },
 };
+// 첫 입력에 소리를 미리 데운다: AudioContext·iOS 잠금 풀기(음량 0 짧은 소리)·잡음 버퍼. 꺼져 있으면 나중 첫 소리 때 만든다
+function warmAudio(){
+  if (!P || P.set.muted) return;
+  try { ac(); const s = AC.createBufferSource(), g = AC.createGain(); s.buffer = AC.createBuffer(1, 1, AC.sampleRate); g.gain.value = 0; s.connect(g).connect(AC.destination); s.start(); noiseBuf();
+    AC.resume().then(() => AC?.state === 'running' && removeEventListener('pointerup', warmAudio, true)).catch(() => {}); } catch {}
+}
+// 터치에서는 pointerdown이 사용자 동작으로 안 쳐서 pointerup에. 잠금이 풀릴 때까지(로딩 중·꺼짐 포함) 다음 탭에 다시 시도
+addEventListener('pointerup', warmAudio, true);
 /* ───────── 배경음악 (WebAudio 합성, 파일 0) ─────────
    악보: 음은 음계 도수(1~7, ' 한 옥타브 위, , 아래, b·# 반음), '.' 늘임, '-' 쉼, 마디는 '|'. 마디 토큰 수 = div
    코드는 마디마다 도수 하나('+'면 반 마디씩). 숫자만이면 음계 안 3화음, 7을 붙이면 7화음, M·m·D(속7)·s(sus4)·p(5도)는 직접 지정
@@ -1224,7 +1239,7 @@ const FX = (() => {
     outElastic:(t) => (t <= 0 || t >= 1 ? t : 2 ** (-10 * t) * Math.sin((t * 10 - .75) * 2.0944) + 1),
   };
   const rnd = (a, b) => a + Math.random() * (b - a), pick = (a) => a[Math.floor(Math.random() * a.length)];
-  function size(){ const d = Math.min(2, devicePixelRatio || 1), w = Math.round(innerWidth * d), h = Math.round(innerHeight * d);
+  function size(){ const d = LITE ? 1 : Math.min(2, devicePixelRatio || 1), w = Math.round(innerWidth * d), h = Math.round(innerHeight * d);
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } c.setTransform(d, 0, 0, d, 0, 0); }
   function run(){ if (raf) return; size(); last = performance.now(); raf = requestAnimationFrame(frame); }
   // p.t: 지난 시간(ms, 음수면 아직 대기), p.life: 수명(ms)
@@ -1267,6 +1282,7 @@ const FX = (() => {
   const cnt = (n) => Math.max(1, Math.round(calm() ? n / 4 : n));
   const cols = (o) => (Array.isArray(o.col) ? o.col : [o.col || '#FFB21E']);
   return {
+    resize:() => raf && size(), // 저사양으로 바뀌면 바로 1배 해상도로 (쉴 때는 다음 효과가 맞춘다)
     E, rnd, pick,
     // 파티클 폭발: n 개수 · spd 속도(px/프레임) · g 중력 · drag 감속 · life 수명ms · size · shape dot|star|rect|spark · ang·spread 방향(라디안) · add 빛 더하기
     burst(x, y, o = {}){ const cl = cols(o), n = cnt(o.n ?? 16);
@@ -2020,7 +2036,7 @@ function track(ev, d = {}){
   const m = missionToday(), out = []; let ch = false;
   m.list.forEach((id) => { const x = MIS[id], need = x?.need || 1; if (!x || x.ev !== ev || (m.prog[id] || 0) >= need || x.test && !x.test(d)) return;
     m.prog[id] = (m.prog[id] || 0) + 1; ch = true;
-    if (m.prog[id] >= need) { addStamps(x.st); matGive(ECON.matMis); out.push(`미션 완료! ${x.txt} · 도장 +${x.st} · ${matTxt(ECON.matMis)}`); PLAT.log('mission_done', { id }); } });
+    if (m.prog[id] >= need) { addStamps(x.st); matGive(ECON.matMis); out.push(`미션 성공! ${x.txt} · 도장 ${x.st}개 · ${matTxt(ECON.matMis).replace(' +', ' ')}개`); PLAT.log('mission_done', { id }); } });
   if (ch) save(); return out;
 }
 // 점검 수첩: 출시일부터 4주씩 도는 시즌(코드 상수라 서버가 필요 없다). 30칸, 칸마다 도장 ECON.stampCell개
@@ -2412,6 +2428,8 @@ async function startInner(st){
   G = { st, diffs: items.filter((it) => !it.trap).map((it) => ({ ...it, r:hitR(it) })), found:new Set(), done:false, wrong:0, combo:0, maxCombo:0, lastFind:0, el:0, lastFindEl:0, missRun:0, left:st.time, paused:false, extended:false, lastTick:99, newDex:[],
     traps:items.filter((it) => it.trap), tut:st.mode === 'tut', relax:!!P.set.relax && st.mode !== 'tut' && st.mode !== 'ugc' };
   G.untimed = G.tut || G.relax; // 시간이 안 줄고, 헛손질 벌점·콤보 +3초도 없다
+  G.pen = st.mode === 'camp' && st.L <= 3 ? 2 : 5; // 헛손질 벌점(초): 1단지 1~3층은 2초
+  G.easy = st.mode === 'camp' && st.L === 1 && !Object.values(P.stars).some(Boolean) ? 2 : 0; // 1단지 1층을 아직 못 깼으면 처음 두 번은 봐준다(오늘의 집·이웃 집은 안 봐줌)
   petStart(); runStart(); // 펫 그림·시간 보너스(아기 공룡·꼬마 용) · 연승 시간
   if (G.st.replay) whenPlay(() => toast('다시 점검! 하자 자리가 새로 바뀌었어요'), G.runAdd ? 4600 : 2000); // 외운 자리를 누르기 전에 (연승 토스트 뒤에)
   if (st.mode === 'daily') { const ci = sceneCi(st.scene.id); if (ci > 0 && !unlocked(ci, 1)) whenPlay(() => toast(`${ciName(ci)} ${CHAPTERS[ci].name} 방을 미리 보여 드려요`), 4200); } // 연승 알림 뒤에
@@ -2473,10 +2491,12 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const RM = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 // 저사양 자동 감지: 판이 도는 첫 3초의 평균 프레임이 22ms를 넘으면 이번 실행 동안 효과를 가볍게 (FX 파티클 1/4·흔들림·히트스톱 없음·번쩍 옅게, 배경음악 동시 발음 24)
 // 6배 느린 CPU에서 33ms 넘는 프레임이 15% → 5%로 준다 (D2 측정). 판 진행·연출 순서(준비… 시작! 등)는 그대로
-let LITE = false, liteN = 0, liteT = 0;
+let LITE = false, liteN = 0, liteT = 0, liteA = [];
 const calm = () => LITE || RM();
-function liteMeasure(ms){ if (LITE || liteN < 0) return; liteN++; liteT += Math.min(ms, 200); if (liteT < 3000) return;
-  if (liteT / liteN > 22) { LITE = true; BGM.lite?.(); PLAT.log('lite', { ms:Math.round(liteT / liteN) }); } liteN = -1; }
+// 첫 3초: 평균 22ms 넘거나, 3초 동안 프레임 p90이 34ms 넘으면(가끔 크게 끊김) 효과를 가볍게. 판정은 한 번만
+function liteMeasure(ms){ if (LITE || liteN < 0) return; liteN++; liteT += Math.min(ms, 200); liteA.push(ms); if (liteA.length > 400) liteA.shift(); if (liteT < 3000) return;
+  const a = [...liteA].sort((x, y) => x - y), p90 = a[Math.floor(a.length * .9)];
+  if (liteT / liteN > 22 || p90 > 34) { LITE = true; BGM.lite?.(); FX.resize?.(); PLAT.log('lite', { ms:Math.round(liteT / liteN), p90:Math.round(p90) }); } liteN = -1; }
 // 판 시작: 0.8초 '준비… 시작!' 뒤에 시간이 간다 (움직임 줄이기면 바로). 처음 보는 기능은 말풍선 한 줄: 말풍선이 떠 있는 TIP_MS 동안은 시간이 안 간다
 const TIP_MS = 2400;
 function go(){
@@ -2628,19 +2648,21 @@ function tapAt(pane, cx, cy){
     pane.appendChild(rp); setTimeout(() => rp.remove(), 750); PLAT.haptic('tickWeak'); return toast('거의 다 왔어요'); }
   // 아기 해치: 판마다 헛손질 1번을 막는다 (시간·헛손질 수 벌점 없음)
   if (!G.tut && petPow() === 'haechi' && !G.guard) { G.guard = true; petSay('막았어요!'); sfx.hint(); PLAT.haptic('tickWeak'); return toast('아기 해치가 헛손질을 막아 줬어요'); }
+  // 첫 판 봐주기: 처음 두 번은 벌점 없이 ✕·흔들림만 (시간·헛손질 수·콤보 그대로)
+  const easy = G.easy > 0 && G.easy--;
   // 1.5초 안에 3번 헛손질하면 시간은 더 안 깎고 2초 동안 입력을 잠근다
-  G.missT = (G.missT || []).filter((s) => t - s < 1500).concat(t); const spam = !G.tut && G.missT.length >= 3;
+  if (!easy) G.missT = (G.missT || []).filter((s) => t - s < 1500).concat(t); const spam = !G.tut && !easy && G.missT.length >= 3;
   // 튜토리얼 헛손질은 벌점 없이, '느긋하게'는 횟수만 센다
-  if (!G.tut) { G.wrong++; if (petPow() !== 'ghostpet') G.combo = 0; G.missRun++; if (!G.untimed && !spam) G.left -= 5; } // 꼬마 유령: 콤보는 안 끊긴다
+  if (!G.tut && !easy) { G.wrong++; if (petPow() !== 'ghostpet') G.combo = 0; G.missRun++; if (!G.untimed && !spam) G.left -= G.pen; } // 꼬마 유령: 콤보는 안 끊긴다
   if (spam) { G.missT = []; G.lockUntil = t + 2000; const g = G; $('panes').classList.add('locked'); setTimeout(() => G === g && $('panes').classList.remove('locked'), 2000); }
-  sfx.wrong(); PLAT.haptic('error'); FX.shake(3, 160, $('play')); petSay(Math.random() < .5 ? FX.pick(PET_SAY.miss) : '', 'tilt');
+  if (easy) { sfx.tap(); PLAT.haptic('tickWeak'); } else { sfx.wrong(); PLAT.haptic('error'); FX.shake(3, 160, $('play')); petSay(Math.random() < .5 ? FX.pick(PET_SAY.miss) : '', 'tilt'); }
   const x2 = document.createElement('div'); x2.className = 'x'; x2.textContent = '✕';
   const pr = pane.getBoundingClientRect(); x2.style.left = `${cx - pr.left}px`; x2.style.top = `${cy - pr.top}px`;
   pane.appendChild(x2); setTimeout(() => x2.remove(), 650);
   pane.classList.remove('shake'); void pane.offsetWidth; pane.classList.add('shake');
-  const pen = G.untimed ? '' : ' · 5초 줄었어요';
-  toast(G.tut ? '앗, 거긴 똑같아요. 진짜 판에서는 틀리면 시간이 줄어요' : spam ? '천천히 봐요' : trap ? `이건 모델하우스에도 있어요${pen}` : !pen || P.seen.miss ? `여긴 똑같아요${pen}` : '여긴 똑같아요. 잘못 누르면 5초 줄어요');
-  if (pen && !P.seen.miss) { P.seen.miss = 1; save(); }
+  const pen = G.untimed ? '' : ` · ${G.pen}초 줄었어요`;
+  toast(easy ? (trap ? '이건 모델하우스에도 있어요. 괜찮아요!' : G.easy || G.untimed ? '괜찮아요, 천천히!' : '괜찮아요! 다음부터는 시간이 줄어요') : G.tut ? '앗, 거긴 똑같아요. 진짜 판에서는 틀리면 시간이 줄어요' : spam ? '천천히 봐요' : trap ? `이건 모델하우스에도 있어요${pen}` : !pen || P.seen.miss ? `여긴 똑같아요${pen}` : `여긴 똑같아요. 잘못 누르면 ${G.pen}초 줄어요`);
+  if (pen && !easy && !P.seen.miss) { P.seen.miss = 1; save(); }
 }
 /* 살짝 힌트: 정답 대신 '이 근처'만 알려 준다. 판당 첫 번은 바로, 그 뒤로는 45초(노는 시간)마다. 감점 없음. 이웃 집에서는 못 쓴다 */
 const SOFT_CD = 45;
@@ -3187,7 +3209,7 @@ function timeUp(){
 const RUN_T = [0, 5, 10, 15];
 function runStart(){
   const add = RUN_T[P.winRun] || 0; if (!add || G.untimed || !['camp', 'daily', 'free'].includes(G.st.mode)) return;
-  G.left += add; G.runAdd = add; const n = P.winRun; whenPlay(() => toast(`연승 ${n} · 덤 시간 +${add}초`), 2000); // 펫 말풍선(시작 때) 뒤에
+  G.left += add; G.runAdd = add; const n = P.winRun; whenPlay(() => toast(`연속 ${n}번! 시간 ${add}초 더`), 2000); // 펫 말풍선(시작 때) 뒤에
 }
 const runReset = () => { if (P.winRun) { P.winRun = 0; save(); } };
 const sceneCi = (id) => CHAPTERS.findIndex((c) => c.scenes.some((x) => x.key === id));
@@ -3225,10 +3247,11 @@ function winNow(){
   const stars = starCalc(helped);
   // 못 받은 별의 조건 한 줄: 돋보기 → 30초 연장 → 정답 보기 → 헛손질·남은 시간 순으로 가장 먼저 걸리는 것
   const t3 = Math.ceil(st.time * .4), slow = !G.relax && left / st.time < .4, gain = starCalc(0) - stars;
+  const near = slow && G.wrong <= 1 && t3 - left <= 5 && Math.max(1, Math.ceil(t3 - left)); // 조금 모자랐으면 'n초만 더 빨랐으면'
   const why = st.mode !== 'camp' || stars >= 3 ? '' : gain ? `찾아 주는 도구 없이 풀면 별 +${gain}` : G.extended ? '30초를 더 받은 판은 별 1개까지예요'
     : REVEALED.has(st.key) ? '정답을 본 층은 별 2개까지예요' : G.wrong > 1 && slow ? `${t3}초 넘게 남기고 헛손질 1번 이하면 별 3개`
-    : G.wrong > 1 ? '헛손질을 1번 이하로 하면 별 3개' : slow ? `${t3}초 넘게 남기면 별 3개` : '';
-  const whyRun = slow && G.runAdd && /초 넘게/.test(why) ? `<br>연승 덤 ${G.runAdd}초를 빼면 ${Math.round(left)}초 남았어요` : '';
+    : G.wrong > 1 ? '헛손질을 1번 이하로 하면 별 3개' : near ? `${near}초만 더 빨랐으면 별 3개!` : slow ? `${t3}초 넘게 남기면 별 3개` : '';
+  const whyRun = G.runAdd && near && why.startsWith(`${near}초만`) ? `<br>(연속 성공으로 더 받은 ${G.runAdd}초는 빼고 세요)` : slow && G.runAdd && /초 넘게/.test(why) ? `<br>연속 성공으로 더 받은 ${G.runAdd}초를 빼면 ${Math.round(left)}초 남았어요` : '';
   let firstToday = false;
   if (st.mode === 'daily') {
     const t = today(), d = P.daily; if (!(d.date === t && d.done)) { firstToday = true;
@@ -3277,7 +3300,7 @@ function winNow(){
     <h3 class="disp${st.mode === 'camp' ? '' : ' tall'}" style="padding-right:90px">${esc(st.label)}</h3>
     ${cert}${st.mode === 'camp' ? starRow('bigstars', stars) : ''}${why ? `<p class="why">${why}${whyRun}</p>` : ''}
     <div class="stat">${G.relax ? `<div><span>돋보기</span><b>${helped}개</b></div>` : `<div><span>남은 시간</span><b>${Math.max(0, Math.round(G.left))}초</b></div>`}<div><span>최고 콤보</span><b>${G.maxCombo}번</b></div><div><span>헛손질</span><b>${G.wrong}번</b></div></div>
-    ${gopen}${helped || aimed || G.relax || runOn ? `<div class="chips">${runOn ? `<span class="tape g">연승 ${run} · 다음 판 덤 시간 +${RUN_T[run]}초</span>` : ''}${G.relax ? '<span class="tape">느긋하게</span>' : ''}${aimed ? `<span class="tape">무기로 ${aimed}곳</span>` : ''}${helped ? '<span class="tape k">도움 받음</span>' : ''}</div>` : ''}
+    ${gopen}${helped || aimed || G.relax || runOn ? `<div class="chips">${runOn ? `<span class="tape g">연속 ${run}번 성공! 다음 판 ${RUN_T[run]}초 더</span>` : ''}${G.relax ? '<span class="tape">느긋하게</span>' : ''}${aimed ? `<span class="tape">무기로 ${aimed}곳</span>` : ''}${helped ? '<span class="tape k">도움 받음</span>' : ''}</div>` : ''}
     ${coins || dailyCoin || drops.length ? `<div class="gain">${coins + dailyCoin ? `<span class="coin">코인 +${coins + dailyCoin}</span>` : ''}${boxGain(drops)}</div>` : ''}
     ${openBtn(drops)}${matHtml()}${extra}
     <div class="sec">붙인 테이프</div><div class="chips">${kinds.map((k) => `<span class="tape">${KINDS[k]?.name || '하자'}</span>`).join('')}</div>
@@ -3820,7 +3843,7 @@ const X_SVG = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true
 const dli = (pic, b, t, h) => `<div class="dli${h ? ' h' : ''}">${pic}<p><b>${b}</b> · ${t}</p></div>`; // h: 그림 옆에 글
 const icr = (ks) => `<span class="icr">${ks.map((k) => (ICON_HAS.has(k) ? `<img src="icons/${k}.webp" alt="">` : icon(k))).join('')}</span>`;
 const playCard = () => `${dtag('찾는 법')}${dhd('bv', 'wow', '다른 곳을 톡!')}
-  ${dli('<span class="icr"><span class="tape">긁힘</span></span>', '찾으면', '테이프가 붙어요', 1)}${dli(`<span class="icr">${X_SVG}</span>`, '틀리면', '시간이 5초 줄어요', 1)}
+  ${dli('<span class="icr"><span class="tape">긁힘</span></span>', '찾으면', '테이프가 붙어요', 1)}${dli(`<span class="icr">${X_SVG}</span>`, '틀리면', '시간이 줄어요', 1)}
   ${dli(`<span class="icr">${starRow('stars', 3)}</span>`, '별 3개', '빨리, 덜 틀리고 찾아요', 1)}${dli(icr(['hint']), '돋보기', '막히면 도와줘요', 1)}`;
 // 하자 모양 3장: 벽 · 바닥과 마감 · 물건(시공 실수). 아이 말로 한 줄씩
 const SHAPES = [['벽에 생기는 하자', 'oops', [['crack', '금이 갔어요'], ['stain', '물이 샌 얼룩'], ['mold', '곰팡이가 폈어요'], ['hole', '못 자국이 났어요']]],
