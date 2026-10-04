@@ -1908,7 +1908,7 @@ const DEF = () => ({ v:SCHEMA, tut:0, stars:{}, dex:{}, cur:{ ci:0, fl:1 }, dail
   starClaim:{}, mission:{ date:'', list:[], prog:{}, seen:'' }, pass:{ season:'', stamps:0, claimed:0 },
   // cert: 레벨 100을 처음 깬 날(입주 완료 인증서, 'YYYYMMDD') · home: 내 집 단계와 꾸미기 자리 {key:[x%, y%]}·절반 보상 받은 단계 · mat: 재료 {key:n}
   // winRun: 연승(0~3) · freeN: 자유 점검 판 번호(시드)
-  cert:'', home:{ stage:0, deco:{}, half:0 }, mat:{}, winRun:0, freeN:0 });
+  cert:'', home:{ stage:0, deco:{}, half:0 }, mat:{}, winRun:0, freeN:0, rpN:0 });
 const isObj = (o) => !!o && typeof o === 'object' && !Array.isArray(o);
 // plain object는 재귀로 합치고, 나머지는 저장값이 기본값과 같은 종류일 때만 쓴다 (깨진 저장값 하나로 부팅이 막히거나 코인이 '100'+50='10050'처럼 붙지 않게)
 // 배열 → 배열만 · 숫자 → 유한한 수로 바꿀 수 있는 값(문자열 '5'도 5로) · 불리언 → 불리언만 · 문자열 → 문자열만 · 기본이 객체인데 저장값이 객체가 아니면 기본값
@@ -1953,7 +1953,7 @@ function loadP(raw){ if (!isObj(raw)) raw = null; const p = deepDefaults(DEF(), 
   for (const m of [p.stars, p.dex, p.boxes, p.inv]) for (const k in m) m[k] = cnt0(m[k]);
   p.inbox = p.inbox.filter((e) => isObj(e) && typeof e.id === 'string' && isObj(e.p) && typeof e.p.room === 'string').slice(0, 20);
   p.mission.list = p.mission.list.filter((id) => MIS[id]); if (!isObj(p.mission.prog)) p.mission.prog = {};
-  p.winRun = clamp(Math.trunc(p.winRun), 0, 3); p.freeN = cnt0(p.freeN); return p; }
+  p.winRun = clamp(Math.trunc(p.winRun), 0, 3); p.freeN = cnt0(p.freeN); p.rpN = cnt0(p.rpN) % 1e9; return p; }
 let P = null; // boot()에서 store.init() 뒤에 만든다
 // 경제 상수: tools/econ.py가 이 줄을 읽어 예산을 확인한다. 바꾸면 python tools/econ.py를 다시 돌린다
 // tutBox: 튜토리얼 끝 공구 상자(1회) · relaxCoin: '느긋하게' 코인 배율 · replayCapDay: 별 못 올린 재플레이 코인 하루 상한
@@ -2388,6 +2388,8 @@ async function start(st){
   finally { starting = false; }
 }
 async function startInner(st){
+  // 다시 점검: 별 3개 받은 층을 다시 하면 판 번호 시드(P.rpN)로 하자 자리를 새로 (stageOf·golden은 그대로, 보상은 다시 하기와 같다)
+  if (st.mode === 'camp' && P.stars[st.key] === 3 && !st.replay) { P.rpN = (P.rpN || 0) + 1; st = { ...st, replay:true, seed:hash(`${st.key}:r${P.rpN}`), label:`${st.label} · 다시 점검` }; save(); }
   $('load').hidden = false;
   // 로딩 표시를 한 번 그린 뒤에 무거운 일을 한다 (rAF가 안 도는 숨은 탭이면 0.1초 뒤에)
   await new Promise((r) => { requestAnimationFrame(() => setTimeout(r)); setTimeout(r, 100); });
@@ -2411,6 +2413,7 @@ async function startInner(st){
     traps:items.filter((it) => it.trap), tut:st.mode === 'tut', relax:!!P.set.relax && st.mode !== 'tut' && st.mode !== 'ugc' };
   G.untimed = G.tut || G.relax; // 시간이 안 줄고, 헛손질 벌점·콤보 +3초도 없다
   petStart(); runStart(); // 펫 그림·시간 보너스(아기 공룡·꼬마 용) · 연승 시간
+  if (G.st.replay) whenPlay(() => toast('다시 점검! 하자 자리가 새로 바뀌었어요'), G.runAdd ? 4600 : 2000); // 외운 자리를 누르기 전에 (연승 토스트 뒤에)
   if (st.mode === 'daily') { const ci = sceneCi(st.scene.id); if (ci > 0 && !unlocked(ci, 1)) whenPlay(() => toast(`${ciName(ci)} ${CHAPTERS[ci].name} 방을 미리 보여 드려요`), 4200); } // 연승 알림 뒤에
   sparkPlan(); ghostPlan(); // 반짝 보물(내 집 재료)·이번 판 재료 칩 · 보너스 단지 유령
   PLAT.log('stage_start', { key:st.key || st.mode, relax:G.relax ? 1 : 0 });
@@ -2511,7 +2514,9 @@ function tutGo(g){
   el.style.cssText = `left:${d.x / W * 100}%;top:${d.y / H * 100}%`; $('paneB').querySelector('.marks').appendChild(el);
   coach('위아래 그림에서 다른 곳을 톡!', $('paneB'), 0); loop();
 }
-function tutStage(){ const s = stageOf(0, 1); return { ...s, mode:'tut', key:'tut', seed:hash('tut'), n:3, label:`연습 점검 · ${s.scene.name}` }; }
+// 연습 판은 6층 아이방(1층 거실과 다른 방, 쉬어 가는 층이라 처음 5분에 안 겹침). 교묘함·시간은 1층 값
+// 시드 tut3: 하자 3곳이 서로 다른 종류(기울어짐·색 바뀜·곰팡이)라 첫 1분에 여러 종류를 본다
+function tutStage(){ const s = stageOf(0, 1), scene = chapterScene(0, 6); return { ...s, scene, mode:'tut', key:'tut', seed:hash('tut3'), n:3, label:`연습 점검 · ${scene.name}` }; }
 // 9층: 두 그림 모두에 있는 '함정' 하나. 누르면 '이건 모델하우스에도 있어요' (golden 해시가 안 바뀌게 genItems 밖에서 따로 시드)
 function addTrap(st, cA, cB, src, items){
   const R = rng(st.seed ^ 0x5eed);
@@ -3182,7 +3187,7 @@ function timeUp(){
 const RUN_T = [0, 5, 10, 15];
 function runStart(){
   const add = RUN_T[P.winRun] || 0; if (!add || G.untimed || !['camp', 'daily', 'free'].includes(G.st.mode)) return;
-  G.left += add; const n = P.winRun; whenPlay(() => toast(`연승 ${n} · 시간 +${add}초`), 2000); // 펫 말풍선(시작 때) 뒤에
+  G.left += add; G.runAdd = add; const n = P.winRun; whenPlay(() => toast(`연승 ${n} · 덤 시간 +${add}초`), 2000); // 펫 말풍선(시작 때) 뒤에
 }
 const runReset = () => { if (P.winRun) { P.winRun = 0; save(); } };
 const sceneCi = (id) => CHAPTERS.findIndex((c) => c.scenes.some((x) => x.key === id));
@@ -3213,14 +3218,17 @@ function winNow(){
   // 무기(물총·폭죽, G.aimed)로 찾은 곳은 도움으로 안 친다: 간판 장난감을 별 때문에 아끼지 않게 (이웃 집·도전장 점수에서는 그대로 도움)
   const st = G.st, prev = P.stars[st.key] || 0, aimed = G.aimed || 0, helped = Math.max(0, (G.helped || 0) - aimed); let extra = '', dailyCoin = 0;
   // 느긋하게: 시간 대신 헛손질(1번 이하·돋보기 안 씀 3개, 4번 이하 2개)
-  const starCalc = (h) => { let n = G.relax ? (G.wrong <= 1 && !h ? 3 : G.wrong <= 4 ? 2 : 1) : (G.left / st.time >= .4 && G.wrong <= 1 ? 3 : G.left / st.time >= .2 ? 2 : 1) - (h ? 1 : 0) - (h >= G.diffs.length ? 1 : 0); // 도구·무기를 쓰면 별 1개만 뺀다(새 장난감을 쓰면 벌받는 느낌이 안 들게). 손으로 하나도 안 찾았으면 1개 더
+  // 연승으로 더 받은 시간(G.runAdd)은 별에 안 친다 (덤 시간으로만, 보이는 남은 시간은 그대로)
+  const left = Math.max(0, G.left - (G.runAdd || 0));
+  const starCalc = (h) => { let n = G.relax ? (G.wrong <= 1 && !h ? 3 : G.wrong <= 4 ? 2 : 1) : (left / st.time >= .4 && G.wrong <= 1 ? 3 : left / st.time >= .2 ? 2 : 1) - (h ? 1 : 0) - (h >= G.diffs.length ? 1 : 0); // 도구·무기를 쓰면 별 1개만 뺀다(새 장난감을 쓰면 벌받는 느낌이 안 들게). 손으로 하나도 안 찾았으면 1개 더
     if (G.extended) n = Math.min(n, 1); if (REVEALED.has(st.key)) n = Math.min(n, 2); return Math.max(1, n); };
   const stars = starCalc(helped);
   // 못 받은 별의 조건 한 줄: 돋보기 → 30초 연장 → 정답 보기 → 헛손질·남은 시간 순으로 가장 먼저 걸리는 것
-  const t3 = Math.ceil(st.time * .4), slow = !G.relax && G.left / st.time < .4, gain = starCalc(0) - stars;
+  const t3 = Math.ceil(st.time * .4), slow = !G.relax && left / st.time < .4, gain = starCalc(0) - stars;
   const why = st.mode !== 'camp' || stars >= 3 ? '' : gain ? `찾아 주는 도구 없이 풀면 별 +${gain}` : G.extended ? '30초를 더 받은 판은 별 1개까지예요'
     : REVEALED.has(st.key) ? '정답을 본 층은 별 2개까지예요' : G.wrong > 1 && slow ? `${t3}초 넘게 남기고 헛손질 1번 이하면 별 3개`
     : G.wrong > 1 ? '헛손질을 1번 이하로 하면 별 3개' : slow ? `${t3}초 넘게 남기면 별 3개` : '';
+  const whyRun = slow && G.runAdd && /초 넘게/.test(why) ? `<br>연승 덤 ${G.runAdd}초를 빼면 ${Math.round(left)}초 남았어요` : '';
   let firstToday = false;
   if (st.mode === 'daily') {
     const t = today(), d = P.daily; if (!(d.date === t && d.done)) { firstToday = true;
@@ -3267,16 +3275,15 @@ function winNow(){
   const cont = (cls) => (nextOk ? `<button class="btn ${cls}" type="button" data-act="next">다음 층</button>` : moreBtn(cls, st));
   endSheet(`<div class="stamp">점검<br>완료</div>
     <h3 class="disp${st.mode === 'camp' ? '' : ' tall'}" style="padding-right:90px">${esc(st.label)}</h3>
-    ${cert}${st.mode === 'camp' ? starRow('bigstars', stars) : ''}${why ? `<p class="why">${why}</p>` : ''}
+    ${cert}${st.mode === 'camp' ? starRow('bigstars', stars) : ''}${why ? `<p class="why">${why}${whyRun}</p>` : ''}
     <div class="stat">${G.relax ? `<div><span>돋보기</span><b>${helped}개</b></div>` : `<div><span>남은 시간</span><b>${Math.max(0, Math.round(G.left))}초</b></div>`}<div><span>최고 콤보</span><b>${G.maxCombo}번</b></div><div><span>헛손질</span><b>${G.wrong}번</b></div></div>
-    ${gopen}${helped || aimed || G.relax || runOn ? `<div class="chips">${runOn ? `<span class="tape g">연승 ${run} · 다음 판 시간 +${RUN_T[run]}초</span>` : ''}${G.relax ? '<span class="tape">느긋하게</span>' : ''}${aimed ? `<span class="tape">무기로 ${aimed}곳</span>` : ''}${helped ? '<span class="tape k">도움 받음</span>' : ''}</div>` : ''}
+    ${gopen}${helped || aimed || G.relax || runOn ? `<div class="chips">${runOn ? `<span class="tape g">연승 ${run} · 다음 판 덤 시간 +${RUN_T[run]}초</span>` : ''}${G.relax ? '<span class="tape">느긋하게</span>' : ''}${aimed ? `<span class="tape">무기로 ${aimed}곳</span>` : ''}${helped ? '<span class="tape k">도움 받음</span>' : ''}</div>` : ''}
     ${coins || dailyCoin || drops.length ? `<div class="gain">${coins + dailyCoin ? `<span class="coin">코인 +${coins + dailyCoin}</span>` : ''}${boxGain(drops)}</div>` : ''}
     ${openBtn(drops)}${matHtml()}${extra}
     <div class="sec">붙인 테이프</div><div class="chips">${kinds.map((k) => `<span class="tape">${KINDS[k]?.name || '하자'}</span>`).join('')}</div>
     ${G.newDex.length ? `<p>도감에 새로 올렸어요: <b style="color:var(--ink)">${G.newDex.map((k) => KINDS[k]?.name || '하자').join(', ')}</b></p>` : ''}
     ${goalHtml()}
-    ${st.mode === 'daily' ? '<button class="btn m" type="button" data-act="brag">결과 자랑하기</button>' : ''}
-    <div class="foot">${nextOk && !bopen ? nextPeek(st) : ''}<div class="row">${bopen ? `${cont('w')}<button class="btn y boing ghostgo" type="button" data-act="ghostgo">유령 저택 가기</button>` : home ? `${cont('w')}<button class="btn y boing" type="button" data-go="home">지금 짓기!</button>`
+    <div class="foot">${nextOk && !bopen ? nextPeek(st) : st.mode === 'daily' ? '<button class="btn m" type="button" data-act="brag">결과 자랑하기</button>' : ''}<div class="row">${bopen ? `${cont('w')}<button class="btn y boing ghostgo" type="button" data-act="ghostgo">유령 저택 가기</button>` : home ? `${cont('w')}<button class="btn y boing" type="button" data-go="home">지금 짓기!</button>`
       : `<button class="btn w" type="button" data-go="${backOf(st)}">${back}</button>${cont('y')}`}</div></div>`);
 }
 // 입주 완료 인증서: 점수(별 x 10)·날짜·등급(별 합계)
@@ -3779,12 +3786,12 @@ $('sheet').addEventListener('click', (e) => {
 // 못 만들면 null → 카드는 도감 아이콘(icon)으로
 let TUTP = null;
 const tutPics = () => TUTP || (TUTP = tutPicsMake().then((p) => { if (!p.full) TUTP = null; return p; }, (e) => { console.warn('[hj] 카드 그림', e); TUTP = null; return null; }));
-// 연습 방(1단지 1층 거실) 그림에서 보여 주기 좋은 자리: 맨 벽·마루 판자 위 [x, y, 조각 너비], 시공 실수 물건 [x, y, 크기] (dup은 옆자리 x까지). 방 그림을 바꾸면 여기도 다시 고른다
+// 카드 조각용 거실(1단지 1층, 연습 판은 아이방) 그림에서 보여 주기 좋은 자리: 맨 벽·마루 판자 위 [x, y, 조각 너비], 시공 실수 물건 [x, y, 크기] (dup은 옆자리 x까지). 방 그림을 바꾸면 여기도 다시 고른다
 // 마루는 러그와 받침 모서리 사이 좁은 띠라 조각을 작게(160x120) 자른다. remove는 시계를 넉넉히(130) 지워야 얼룩 같은 흔적이 안 남고, tilt는 액자 전체(140)를 돌려야 테두리가 두 겹으로 안 보인다
 const TUT_SPOT = { wall:[1040, 235, 200], floor:[500, 835, 160], tilt:[1008, 398, 140], remove:[703, 255, 130], recolor:[808, 497, 100], dup:[657, 830, 100, 552] };
 const TUT_SZ = { crack:105, scratch:80, hole:150, dent:100 }; // 하자 크기(조각 안에서 잘 보이게, 나머지 80)
 async function tutPicsMake(){
-  const src = srcCanvas(await loadImg(tutStage().scene.id)), nd = () => Object.keys(DECALS).length >= Object.keys(DECAL_LIST).length;
+  const src = srcCanvas(await loadImg(stageOf(0, 1).scene.id)), room = srcCanvas(await loadImg(tutStage().scene.id)), nd = () => Object.keys(DECALS).length >= Object.keys(DECAL_LIST).length;
   await new Promise((r) => { const t0 = Date.now(), f = () => (nd() || Date.now() - t0 > 1500 ? r() : setTimeout(f, 100)); f(); });
   const out = { full:nd() }, T = TUT_SPOT;
   // (cx, cy) 둘레 cw x ch 조각: a 원래, b 그릴 곳(읽기 잦음, 조각 좌표), x0·y0 조각의 그림 좌표 → [원래, 바뀐] JPEG
@@ -3797,9 +3804,9 @@ async function tutPicsMake(){
   ['tilt', 'remove', 'recolor'].forEach((k) => { const [x, y, s] = T[k]; out[k] = pair(x, y, 220, 165, (c, a, x0, y0) => objOp(c, a, k, x - x0, y - y0, s, 0, rng(hash('tut' + k)), 0)); });
   { const [sx, sy, s, x] = T.dup; out.dup = pair((sx + x) / 2, sy, 260, 195, (c, a, x0, y0) => dupOp(c, a, { k:'dup', x:x - x0, y:sy + 10 - y0, s, sx:sx - x0, sy:sy - y0 }, 0)); }
   // 인트로: 방 전체 [모델하우스, 연습 판의 하자 스티커 하나만 있는 우리 집] (연습 판에서 그 자리를 다시 만난다)
-  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d', { willReadFrequently:true }); x.drawImage(src, 0, 0);
-  const it = genItems(tutStage(), x, src).find((i) => DRAW[i.k]) || { k:'stain', x:T.wall[0], y:T.wall[1], s:150, d:0, seed:1 };
-  x.drawImage(src, 0, 0); out.roomA = url(c, 400); applyItem(x, src, it); out.roomB = url(c, 400); out.spot = [it.x / W * 100, it.y / H * 100];
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d', { willReadFrequently:true }); x.drawImage(room, 0, 0);
+  const it = genItems(tutStage(), x, room).find((i) => DRAW[i.k]) || { k:'stain', x:W / 2, y:H / 3, s:150, d:0, seed:1 };
+  x.drawImage(room, 0, 0); out.roomA = url(c, 400); applyItem(x, room, it); out.roomB = url(c, 400); out.spot = [it.x / W * 100, it.y / H * 100];
   return out;
 }
 const dtag = (t, c = '') => `<span class="tape${c}" style="align-self:flex-start">${t}</span>`;
