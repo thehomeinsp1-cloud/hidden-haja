@@ -89,6 +89,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ai-note{margin:0;text-align:center;font-size:var(--f3);color:var(--ink2)}
 #title .coinTL{position:absolute;left:16px;top:calc(12px + var(--sat))}
 /* 오늘의 집 출석 도장판: 7칸, 7일째는 황금 상자 */
+.evband{border:0;border-radius:12px;background:linear-gradient(90deg,#F2A100,#FFD76A);color:#5A3A00;font-family:"Jua",sans-serif;font-size:var(--f2);padding:6px 10px;text-align:center;box-shadow:0 2px 0 var(--line)}.evband[hidden]{display:none}
 .daily{border:0;border-radius:18px;background:var(--card);box-shadow:0 3px 0 var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px;text-align:left}
 .daily .dh{display:flex;align-items:center;gap:8px;min-width:0}
 .daily .dh b{font-family:"Jua",sans-serif;font-weight:400;font-size:1.3125rem;white-space:nowrap}
@@ -185,6 +186,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mk.h circle{stroke:var(--mint)}
 .mk.miss circle{stroke:var(--coral)}
 @keyframes draw{to{stroke-dashoffset:0}}
+.mk .newtag{position:absolute;left:50%;bottom:100%;transform:translate(-50%,-2px) rotate(3deg);white-space:nowrap;font-family:"Jua",sans-serif;font-size:var(--f3);line-height:1.1;padding:1px 7px 2px;border-radius:4px;background:var(--brick);color:#fff;animation:pop2dn .3s both}
 .mk .tg{position:absolute;left:50%;top:100%;transform:translate(-50%,2px) rotate(-3deg);white-space:nowrap;font-size:var(--f3);padding:1px 8px 2px;animation:pop .3s .35s both}
 .mk.el .tg{--tx:-6px;transform:translate(-6px,2px) rotate(-3deg)}.mk.er .tg{--tx:6px;left:auto;right:50%;transform:translate(6px,2px) rotate(-3deg)} /* 그림 가장자리 15% 안이면 안쪽으로 */
 @keyframes pop{from{transform:translate(var(--tx,-50%),2px) rotate(-3deg) scale(0)}to{transform:translate(var(--tx,-50%),2px) rotate(-3deg) scale(1)}}
@@ -683,6 +685,7 @@ img.mi,svg.mi{background:none}
     <button class="mode" type="button" data-go="rank"><b id="rankName">내 기록</b><span id="myRank">별과 연속 출석</span></button>
   </div>
   <button class="homecard" id="homeCard" type="button" data-go="home"><span class="hc"><b>내 집 짓기</b></span></button>
+  <button class="evband" id="evBand" type="button" hidden></button>
   <button class="daily" id="goDaily" type="button"><span class="dh"><b>오늘의 집</b><span class="badge" id="dailyBadge">NEW</span><span class="ds" id="dailySub">매일 새 집이 열려요</span></span><span class="dots" id="dailyDots" role="img"></span></button>
   <div class="mini"><button id="goMis" type="button">미션 <span class="badge" id="misBadge" hidden>NEW</span></button><button type="button" data-go="bag">가방 <span class="badge" id="bagBadge" hidden>0</span></button><button type="button" data-go="shop">상점</button><button id="goDex" type="button">도감</button><button id="setBtn" type="button">설정</button><button class="howb" type="button" data-how>게임 방법<span class="badge" id="howNew" hidden>NEW</span></button></div>
   <p class="ai-note">그림(방·하자 질감·타이틀·내 집·아이콘)은 생성형 AI로 만든 뒤 편집했어요</p>
@@ -852,6 +855,18 @@ const today = () => ymd(new Date(PLAT.now()));
 const dayNum = (s) => Date.UTC(+String(s).slice(0, 4), +String(s).slice(4, 6) - 1, +String(s).slice(6, 8)) / 864e5;
 // [출시] 실제 출시일로 바꾼다. 오늘의 집 #번호가 이날 1
 const LAUNCH_YMD = '20261101';
+// [날짜 이벤트] 기간(YYYYMMDD 문자열 비교)에 든 날은 오늘의 집이 scenes의 방(날 번호로 번갈아)이 되고 미션 도장이 mult배. DATA.scenes에 없는 방 id는 건너뛴다
+const EVENTS = [
+  { id:'fest', name:'입주 축제', from:'20261101', to:'20261107', scenes:['living', 'family', 'kitchen'], band:'입주 축제 · 도장 2배!', mult:2 },
+  { id:'dongji', name:'동지', from:'20261221', to:'20261221', scenes:['hotpot'], band:'동지 팥죽 · 도장 2배!', mult:2 },
+  { id:'xmas', name:'크리스마스', from:'20261224', to:'20261225', scenes:['xmasliving', 'xmaskids'], band:'크리스마스 방 · 오늘만!' },
+  { id:'seol', name:'설날', from:'20270205', to:'20270207', scenes:['seollal', 'kimjang'], band:'설날 점검 · 도장 2배!', mult:2 },
+];
+function eventToday(t = today()){
+  const e = EVENTS.find((x) => t >= x.from && t <= x.to && x.scenes.some((id) => DATA.scenes.some((s) => s.id === id))); // ponytail: 겹치는 기간은 표 앞쪽이 이긴다
+  return e ? { ...e, scenes:e.scenes.filter((id) => DATA.scenes.some((s) => s.id === id)) } : null;
+}
+const evMul = (t) => eventToday(t)?.mult || 1;
 const dayNo = () => Math.max(1, dayNum(today()) - dayNum(LAUNCH_YMD) + 1);
 // 도전장 코드: JSON → UTF-8 바이트 → base64url (한글이 들어가도 btoa 예외가 안 난다)
 const b64u = (u8) => btoa(Array.from(u8, (c) => String.fromCharCode(c)).join('')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -1578,11 +1593,13 @@ const nextL = (st) => (st.mode !== 'camp' ? 0 : st.bonus ? (st.fl < FLOORS ? st.
 // 묶음 안에서는 같은 방이 다시 안 나온다 (예전엔 날마다 복원 추출이라 이틀 연속 같은 방도 나왔다). 아직 안 연 단지 방이면 시작할 때 '미리 보기' 안내
 // 묶음 경계: 앞 묶음 끝 k(=방 수/3)개에 든 방이 이번 묶음 앞 k개에 오면 가운데(k ~ n-k) 방과 맞바꾼다 → 같은 방은 적어도 k+1일 뒤에 (끝 k개는 안 건드려 앞 묶음을 다시 고칠 일이 없다)
 const dayPerm = (b, n) => shuffle([...Array(n).keys()], rng(hash('dp' + b)));
-function dailyStage(t = today()){
+function dailyStage(t = today(), ev = true){ // ev:false = 이벤트 없는 기본 순열 (순열 점검용)
   const n = DATA.scenes.length, i = Math.floor(dayNum(t)) || 0, b = Math.floor(i / n), k = Math.floor(n / 3), perm = dayPerm(b, n), tail = new Set(dayPerm(b - 1, n).slice(n - k));
   for (let j = 0, m = k; j < k; j++) if (tail.has(perm[j])) { while (tail.has(perm[m])) m++; [perm[j], perm[m]] = [perm[m], perm[j]]; m++; }
-  const scene = DATA.scenes[perm[(i % n + n) % n]];
-  return { mode:'daily', key:'daily', scene, d:.62, n:6, time:75, seed:hash('d' + t), label:`오늘의 집 · ${scene.name}` };
+  let scene = DATA.scenes[perm[(i % n + n) % n]], label = `오늘의 집 · ${scene.name}`;
+  const e = ev && eventToday(t);
+  if (e) { scene = DATA.scenes.find((s) => s.id === e.scenes[i % e.scenes.length]); label = `${e.name} · 오늘의 집 · ${scene.name}`; }
+  return { mode:'daily', key:'daily', scene, d:.62, n:6, time:75, seed:hash('d' + t), label };
 }
 
 /* ───────── 그리기 엔진 ───────── */
@@ -2036,7 +2053,7 @@ function track(ev, d = {}){
   const m = missionToday(), out = []; let ch = false;
   m.list.forEach((id) => { const x = MIS[id], need = x?.need || 1; if (!x || x.ev !== ev || (m.prog[id] || 0) >= need || x.test && !x.test(d)) return;
     m.prog[id] = (m.prog[id] || 0) + 1; ch = true;
-    if (m.prog[id] >= need) { addStamps(x.st); matGive(ECON.matMis); out.push(`미션 성공! ${x.txt} · 도장 ${x.st}개 · ${matTxt(ECON.matMis).replace(' +', ' ')}개`); PLAT.log('mission_done', { id }); } });
+    if (m.prog[id] >= need) { addStamps(x.st); matGive(ECON.matMis); out.push(`미션 성공! ${x.txt} · 도장 ${x.st * evMul()}개 · ${matTxt(ECON.matMis).replace(' +', ' ')}개`); PLAT.log('mission_done', { id }); } });
   if (ch) save(); return out;
 }
 // 점검 수첩: 출시일부터 4주씩 도는 시즌(코드 상수라 서버가 필요 없다). 30칸, 칸마다 도장 ECON.stampCell개
@@ -2054,7 +2071,7 @@ function passTake(){
 }
 // 시즌이 바뀌면 못 받은 칸은 챙겨 주고 새 수첩으로
 function passSync(){ const s = season().id; if (P.pass.season === s) return; if (P.pass.season) { const n = passTake().length; if (n) P.seen.passCarry = (P.seen.passCarry || 0) + n; } P.pass = { season:s, stamps:0, claimed:0 }; save(); }
-function addStamps(n){ passSync(); P.pass.stamps = Math.min(PASS.length * ECON.stampCell, P.pass.stamps + n); }
+function addStamps(n){ passSync(); P.pass.stamps = Math.min(PASS.length * ECON.stampCell, P.pass.stamps + n * evMul()); }
 // 다음 목표 한 줄: 단지 별·출석 7일·수첩 큰 칸·전설 조각 중 남은 비율이 가장 작은 것
 function nextGoal(ci = P.cur.ci){
   const c = [], s = starsIn(ci), sg = STAR_GOALS.find(([n]) => !P.starClaim[`${ci}-${n}`] && s < n);
@@ -2073,7 +2090,7 @@ function missionSheet(){
   const can = passCan(), sn = season();
   sheet(`<span class="tape" style="align-self:flex-start">오늘의 미션</span><h3 class="disp">미션을 깨고 도장을 모아요</h3>
     ${m.list.filter((id) => MIS[id]).map((id) => { const x = MIS[id], need = x.need || 1, p = Math.min(m.prog[id] || 0, need), done = p >= need;
-      return `<div class="item${done ? ' fin' : ''}"><span class="nm"><b>${x.txt}</b><span>${done ? '완료했어요' : `${p} / ${need}`}</span></span><span class="tape${done ? ' k' : ''}" style="font-size:var(--f3)">도장 +${x.st}</span></div>`; }).join('')}
+      return `<div class="item${done ? ' fin' : ''}"><span class="nm"><b>${x.txt}</b><span>${done ? '완료했어요' : `${p} / ${need}`}</span></span><span class="tape${done ? ' k' : ''}" style="font-size:var(--f3)">도장 +${x.st * evMul()}</span></div>`; }).join('')}
     <p style="font-size:var(--f3)">미션은 매일 새로 나와요.</p>
     <div class="sec">${sn.title} · 남은 날 ${sn.left}일</div>
     <p>모은 도장 ${P.pass.stamps}개 · 도장 ${ECON.stampCell}개마다 한 칸씩 열려요.</p>
@@ -2217,7 +2234,11 @@ function syncBack(){ if (PLAT.nativeBack || backGuard || (cur === 'title' && $('
 addEventListener('popstate', () => { if (PLAT.nativeBack) return; backGuard = false; sfx.tap(); if (onBack()) syncBack(); else history.back(); });
 document.addEventListener('click', (e) => { if (e.target.closest('[data-back]')) { sfx.tap(); onBack(); } });
 
+// 이벤트 띠 (e를 받아서 selftest가 날짜를 주입할 수 있다)
+function evBand(e){ const b = $('evBand'); b.hidden = !e; if (e) b.textContent = e.band; }
+$('evBand').onclick = () => $('goDaily').click();
 function renderTitle(){
+  evBand(eventToday());
   // 어제 했으면 오늘이 streak+1일째, 끊겼으면 NEW
   const { s, done:doneToday } = streakNow();
   $('dailyBadge').textContent = doneToday ? '완료' : s > 0 ? `${s + 1}일째` : 'NEW'; $('dailyBadge').style.background = doneToday ? 'var(--ink2)' : '';
@@ -2439,10 +2460,10 @@ async function startInner(st){
   $('stageName').textContent = st.scene.name;
   const twNames = Object.values(TWIST).map((t) => t.name);
   // 머리줄이 좁아 특수층·준공 검사 꼬리표가 있으면 'Lv.N'은 뺀다 (지도·결과에는 있다)
-  const tags = st.label.split(' · ').filter((x) => x !== st.scene.name), lvTag = /^(Lv\.\d+|보너스 \d+층)$/;
+  const tags = st.label.split(' · ').filter((x) => x !== st.scene.name && !(x === '오늘의 집' && EVENTS.some((e) => st.label.startsWith(e.name + ' · ')))), lvTag = /^(Lv\.\d+|보너스 \d+층)$/;
   // 360px 폭에서는 긴 꼬리표를 줄인다 (방 이름·꼬리표가 둘 다 '…'로 잘리지 않게)
   // 보너스 보통 층의 '보너스 N층'은 방 이름(7~8자)이 길어 430px 아래에서는 'N층', 360px에서는 뺀다 (보라 테마라 보너스인 게 보이고, 결과·지도에는 전체 이름)
-  const short = innerWidth < 381 ? { '오늘의 집':'오늘', '준공 검사':'준공', '자유 점검':'자유' } : {}, sh = (x) => short[x] || x.replace(/^보너스 (\d+층)$/, innerWidth < 381 ? '' : innerWidth < 431 ? '$1' : '$&');
+  const short = innerWidth < 381 ? { '오늘의 집':'오늘', '준공 검사':'준공', '자유 점검':'자유' } : {}, sh = (x) => short[x] || (innerWidth < 431 && EVENTS.some((e) => e.name === x) ? '이벤트' : '') || x.replace(/^보너스 (\d+층)$/, innerWidth < 381 ? '' : innerWidth < 431 ? '$1' : '$&');
   $('stageTags').innerHTML = (tags.length > 1 ? tags.filter((x) => !lvTag.test(x)) : tags).map((x) => [x, sh(x)]).filter((q) => q[1]).map(([x, t]) => `<span class="tape${twNames.includes(x) ? ' k' : x === '준공 검사' ? ' g' : ''}">${esc(t)}</span>`).join('');
   $('play').dataset.skin = (P.own[P.equip.tape] && P.equip.tape) || 'basic';
   // 특수층·보스층: 거울(우리 집 좌우 반전)·결로(김 서린 막)·기억(모델하우스 가림)·준공 검사(금색 테이프)
@@ -2588,6 +2609,12 @@ function mark(d, i, cls){
   });
   if (cls !== 'miss') { $('slots').children[i].classList.add('on'); $('slots').children[i].textContent = '✓'; slotsLabel(); }
 }
+// 처음 찾은 종류: 방금 붙은 이름표 위에 NEW! 테이프 (1.2초 뒤 사라짐, 움직임 줄이기면 애니메이션 없이 바로 사라짐)
+function newTag(){
+  const mk = $('paneB').querySelector('.marks').lastElementChild; if (!mk) return;
+  const t = document.createElement('span'); t.className = 'newtag'; t.textContent = 'NEW!'; mk.appendChild(t); sfx.tap(); setTimeout(() => t.remove(), RM() ? 0 : 1200);
+}
+const dexCount = () => { const ks = Object.keys(KINDS); return [ks.filter((k) => P.dex[k]).length, ks.length]; };
 function found(i, hint){
   if (!G || G.done || G.found.has(i)) return;
   const d = G.diffs[i]; G.found.add(i);
@@ -2596,7 +2623,7 @@ function found(i, hint){
   G.lastFindEl = G.el; G.missRun = 0; $('hintBtn').classList.remove('nudge');
   if (!hint) { G.combo = now - G.lastFind < (petPow() === 'spacecat' ? 6000 : 4500) ? G.combo + 1 : 1; G.lastFind = now; G.maxCombo = Math.max(G.maxCombo, G.combo); } else { G.helped = (G.helped || 0) + 1; if (G.aim) G.aimed = (G.aimed || 0) + 1; } // 무기로 찾은 곳은 별 계산에서 빼 준다
   mark(d, i, hint ? 'h' : ''); repair(d); ghostGot(i); drawDark(); fogDraw(); memoUi(); findJuice(d, hint);
-  const cnt = (P.dex[d.k] || 0); if (!cnt) G.newDex.push(d.k); P.dex[d.k] = cnt + 1;
+  const cnt = (P.dex[d.k] || 0); if (!cnt) { G.newDex.push(d.k); newTag(); } P.dex[d.k] = cnt + 1;
   if (hint) sfx.hint(); else sfx.find(G.combo);
   sfx.tape(.35); PLAT.haptic('tickMedium');
   if (G.tut && G.found.size < G.diffs.length) { $('finger')?.remove(); const n = G.diffs.length - G.found.size; coach(G.found.size === 1 ? `딩동댕! 테이프를 붙였어요. 남은 ${n}곳은 혼자 찾아봐요` : `잘했어요! 이제 ${n}곳 남았어요`, $('slots'), 3500, true); }
@@ -3289,6 +3316,7 @@ function winNow(){
     const sh = P.shield < ECON.shieldMax; if (sh) P.shield++; extra += `<p>보너스로 황금 상자${sh ? '와 출석 지킴이 1개' : ''}도 드렸어요.</p>`; }
   if (st.mode === 'camp') { const sg = starReward(st.ci); sg.forEach(([, t]) => t !== 'coin' && drops.push(t)); if (sg.some(([, t]) => t === 'coin')) coins += ECON.starCoin; extra += starMsg(sg); }
   track('clear', { mode:st.mode, dark:!!st.dark, twist:st.twist || '', combo:G.maxCombo, wrong:G.wrong, helped, stars:st.mode === 'camp' ? stars : 0, left:G.untimed ? 0 : G.left }).forEach((t) => (extra += `<p><b style="color:var(--ink)">${t}</b></p>`));
+  if (st.mode === 'daily' && evMul() > 1) extra += `<p>이벤트 날은 미션 도장이 ${evMul()}배로 찍혀요.</p>`;
   if (st.mode === 'camp' && !better) extra += coins ? `<p>${prev === 3 ? '이미 별 3개인 층이라' : '별을 더 못 올려서'} 코인은 조금만 드려요.</p>` : '<p>다시 하기 코인은 오늘 다 받았어요. 별을 올리면 다시 받아요.</p>';
   if (st.mode === 'daily') G.brag = bragText();
   save(); confetti();
@@ -3304,7 +3332,7 @@ function winNow(){
     ${coins || dailyCoin || drops.length ? `<div class="gain">${coins + dailyCoin ? `<span class="coin">코인 +${coins + dailyCoin}</span>` : ''}${boxGain(drops)}</div>` : ''}
     ${openBtn(drops)}${matHtml()}${extra}
     <div class="sec">붙인 테이프</div><div class="chips">${kinds.map((k) => `<span class="tape">${KINDS[k]?.name || '하자'}</span>`).join('')}</div>
-    ${G.newDex.length ? `<p>도감에 새로 올렸어요: <b style="color:var(--ink)">${G.newDex.map((k) => KINDS[k]?.name || '하자').join(', ')}</b></p>` : ''}
+    <p>${G.newDex.length ? `도감에 새로 올렸어요: <b style="color:var(--ink)">${G.newDex.map((k) => KINDS[k]?.name || '하자').join(', ')}</b> ` : ''}<span class="tape k">도감 ${dexCount().join('/')}</span></p>
     ${goalHtml()}
     <div class="foot">${nextOk && !bopen ? nextPeek(st) : st.mode === 'daily' ? '<button class="btn m" type="button" data-act="brag">결과 자랑하기</button>' : ''}<div class="row">${bopen ? `${cont('w')}<button class="btn y boing ghostgo" type="button" data-act="ghostgo">유령 저택 가기</button>` : home ? `${cont('w')}<button class="btn y boing" type="button" data-go="home">지금 짓기!</button>`
       : `<button class="btn w" type="button" data-go="${backOf(st)}">${back}</button>${cont('y')}`}</div></div>`);
@@ -4365,7 +4393,7 @@ async function renderRank(){
 
 /* ───────── 도감·기타 ───────── */
 function showDex(){
-  const ks = Object.keys(KINDS), got = ks.filter((k) => P.dex[k]).length;
+  const ks = Object.keys(KINDS), [got] = dexCount();
   const grp = (g) => ks.filter((k) => KINDS[k].grp === g).map((k) => P.dex[k]
     ? `<div><span class="n">${P.dex[k]}번</span>${icon(k)}<h4>${KINDS[k].name}</h4>${KINDS[k].tip}${KINDS[k].yr ? `<br><span class="yr">보수 기간 ${KINDS[k].yr}</span>` : ''}</div>`
     : `<div class="lock">${icon(k)}아직 못 찾았어요</div>`).join('');
