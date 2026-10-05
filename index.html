@@ -336,7 +336,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sheet{position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(20,34,38,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10}
 .sheet .in{position:relative;background:var(--card);width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:22px 18px calc(18px + var(--sab));max-height:90%;overflow-y:auto;display:flex;flex-direction:column;gap:14px;animation:up .28s ease-out}
 @keyframes up{from{transform:translateY(40px);opacity:.3}}
-.sheet h3{margin:0;font-size:1.75rem;line-height:1.15;text-wrap:balance}
+.sheet h3{margin:0;font-size:1.75rem;line-height:1.15;text-wrap:balance;overflow-wrap:anywhere}
 .sheet p{margin:0;line-height:1.6;color:var(--ink2)}
 .sheet .row{display:flex;gap:10px}.sheet .row .btn{flex:1}
 .sheet .in>.row:last-child,.sheet .in>.foot:last-child{position:sticky;bottom:0;background:var(--card);padding-top:8px;box-shadow:0 40px 0 var(--card)} /* 아래 여백으로 본문이 비치지 않게 */
@@ -493,6 +493,7 @@ ul.odds{margin:0;padding-left:20px;font-size:var(--f2);line-height:1.6;color:var
 .sw i::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}
 .sw[aria-pressed="true"] i{background:var(--mint)}.sw[aria-pressed="true"] i::after{left:23px}
 .rotate{display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:60;background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:16px;font-family:"Jua",sans-serif;font-size:1.375rem;color:var(--ink)}
+@media (max-width:380px){#play #stageName{font-size:.9375rem;letter-spacing:-.3px}}
 @media (max-width:360px){#play .stags .tape{padding:0 2px 1px;letter-spacing:-.5px}.floor{gap:8px}.floor .fn{width:44px}.floor .nm>span{font-size:var(--f3);letter-spacing:-.3px}}
 @media (orientation:landscape) and (max-height:520px) and (pointer:coarse){.rotate{display:flex}}
 [data-scr=play] .toast{bottom:calc(58px + var(--sab));font-size:var(--f2);padding:7px 14px}
@@ -856,6 +857,8 @@ const dayNum = (s) => Date.UTC(+String(s).slice(0, 4), +String(s).slice(4, 6) - 
 // [출시] 실제 출시일로 바꾼다. 오늘의 집 #번호가 이날 1
 const LAUNCH_YMD = '20261101';
 // [날짜 이벤트] 기간(YYYYMMDD 문자열 비교)에 든 날은 오늘의 집이 scenes의 방(날 번호로 번갈아)이 되고 미션 도장이 mult배. DATA.scenes에 없는 방 id는 건너뛴다
+// 이벤트 날 오늘의 집 라벨은 '오늘의 집'을 뺀다 ('크리스마스 · 크리스마스 거실'): 머리줄 꼬리표·쉬기·결과 시트 제목
+const shortLabel = (st) => st.label.split(' · ').filter((x) => !(x === '오늘의 집' && EVENTS.some((e) => st.label.startsWith(e.name + ' · ')))).join(' · ');
 const EVENTS = [
   { id:'fest', name:'입주 축제', from:'20261101', to:'20261107', scenes:['living', 'family', 'kitchen'], band:'입주 축제 · 도장 2배!', mult:2 },
   { id:'dongji', name:'동지', from:'20261221', to:'20261221', scenes:['hotpot'], band:'동지 팥죽 · 도장 2배!', mult:2 },
@@ -1892,8 +1895,10 @@ const PLAY_SRC = document.createElement('canvas');
 // 채택은 scenes.json에 미리 구운 비트(objs[i][5], flats[i][4])로 정한다: 기기마다 픽셀 디코딩이 달라도 같은 시드면 같은 판
 // 구운 값이 없는 방(새로 넣은 그림)만 예전처럼 그 자리에서 픽셀 점수로 고른다
 const bakeWarned = {};
-function genItems(st, ctxB, src){
-  const R = rng(st.seed), sc = st.scene, items = [];
+// want: 도감에 없는 종류. 판마다 1곳은 그 종류로(그 층 규칙 안에서 될 때만, R() 호출 순서는 그대로라 want 없으면 결과 같음)
+function genItems(st, ctxB, src, want){
+  const R = rng(st.seed), sc = st.scene, items = [], wk = want?.length ? want : null, cnt = {}, two = (k) => (cnt[k] || 0) < 2; let hit = false;
+  const put = (it) => { items.push(it); cnt[it.k] = (cnt[it.k] || 0) + 1; hit = hit || !!wk?.includes(it.k); }; // 한 판에 같은 종류는 2개까지(모자라면 아래에서 제한 없이 채움)
   const far = (x, y, r) => items.every((q) => Math.hypot(q.x - x, q.y - y) > (hitR(q) + r) * 1.15);
   const nDef = Math.max(1, Math.round(st.n * .4)), nObj = st.n - nDef, bi = st.d < .25 ? 0 : st.d < .75 ? 1 : 2;
   if (!sc.objs[0]?.[5] && !bakeWarned[sc.id]) { bakeWarned[sc.id] = 1; console.warn('[hj] 구운 판정 없음, 런타임 판정:', sc.id); }
@@ -1905,27 +1910,30 @@ function genItems(st, ctxB, src){
     let ops = shuffle(MISTAKE_KINDS.filter((k) => k !== 'dup' && (k !== 'shift' || st.d > .3) && (k !== 'dim' || st.d > .5)), R);
     if (o[4] < 45) ops = [...ops.filter((k) => k !== 'recolor'), ...ops.filter((k) => k === 'recolor')]; // 무늬 없는 물건은 색 바꾸기를 뒤로
     if (o[5]) ops = ops.filter((k) => o[5][bi] >> MISTAKE_KINDS.indexOf(k) & 1);
+    ops = ops.filter(two);
+    if (wk && !hit) ops = [...ops.filter((k) => wk.includes(k)), ...ops.filter((k) => !wk.includes(k))];
     for (const k of ops) { const it = { k, x, y, s:sz, d:st.d, seed:Math.floor(R() * 1e9) };
-      if (o[5]) { applyItem(ctxB, src, it); items.push(it); break; }
-      if (applyItem(ctxB, src, it, thr) >= thr) { items.push(it); break; } }
+      if (o[5]) { applyItem(ctxB, src, it); put(it); break; }
+      if (applyItem(ctxB, src, it, thr) >= thr) { put(it); break; } }
   }
   // 교묘함 구간별 등급: d<.17(1단지 전부·2단지 앞 4층·3단지 1층)과 쉬어 가는 층은 1등급만, d<.5는 3등급 1개까지, 그 뒤는 2개까지
   const t3max = st.d < .5 ? 1 : 2; let t3 = 0;
+  for (const lim of [true, false]) { if (items.length >= st.n) break;
   for (const f of shuffle(sc.flats.slice(), R)) {
     if (items.length >= st.n) break;
     // 벽 전용 하자는 그림 위쪽(벽)에서만, 바닥 하자는 아래쪽에서만
     // 'f'는 밝기로만 가른 것이라 색 있는 벽도 'f'다: 그림 위쪽 30%는 늘 벽으로 친다 (바닥 찍힘이 벽에 붙지 않게)
     const high = f[1] < H * .5, base = f[2] === 'w' || f[1] < H * .3 ? (high ? ['crack', 'stain', 'mold', 'bubble', 'hole', 'web', 'cobweb', 'drip', 'dirt', 'chip', 'gap', 'rust'] : ['crack', 'stain', 'hole', 'dirt']) : ['scratch', 'dent', 'paint', 'stain', 'dirt'];
     // 유령 층은 하자가 절반쯤 안 보여서, 보너스 1~4층은 막 연 아이들이 오는 곳이라 가늘고 작은 3등급은 뺀다
-    const pool = base.filter((k) => (st.d < .17 || st.rest ? KINDS[k].tier === 1 : st.twist === 'ghost' || st.bonus && st.fl < 5 ? KINDS[k].tier < 3 : KINDS[k].tier < 3 || t3 < t3max) && (f[4] == null || f[4] >> DEFECT_KINDS.indexOf(k) & 1));
+    const pool = base.filter((k) => (st.d < .17 || st.rest ? KINDS[k].tier === 1 : st.twist === 'ghost' || st.bonus && st.fl < 5 ? KINDS[k].tier < 3 : KINDS[k].tier < 3 || t3 < t3max) && (f[4] == null || f[4] >> DEFECT_KINDS.indexOf(k) & 1) && (!lim || two(k)));
     if (!pool.length) continue;
-    const k = pool[Math.floor(R() * pool.length)], s = lerp(78, 56, st.d) * (.85 + R() * .3) * (LINEAR.includes(k) ? 1.5 : 1);
+    const k0 = pool[Math.floor(R() * pool.length)], k = (wk && !hit && pool.find((q) => wk.includes(q))) || k0, s = lerp(78, 56, st.d) * (.85 + R() * .3) * (LINEAR.includes(k) ? 1.5 : 1);
     if (!far(f[0], f[1], s * .62)) continue;
     const it = { k, x:f[0], y:f[1], s, d:lerp(0, .25, st.d), seed:Math.floor(R() * 1e9) };
     if (f[4] == null && applyItem(ctxB, src, it, VIS_MIN_DEFECT) < VIS_MIN_DEFECT) continue;
     if (f[4] != null) applyItem(ctxB, src, it);
-    items.push(it); if (KINDS[k].tier === 3) t3++;
-  }
+    put(it); if (KINDS[k].tier === 3) t3++;
+  } }
   return items;
 }
 
@@ -2440,7 +2448,9 @@ async function startInner(st){
   let items;
   // 받은 집: 사실상 안 보이는 하자(보인 정도가 기준의 70% 미만)는 그리지 않고 빼고 시작한다
   if (st.mode === 'ugc') { items = st.puzzle.items ? st.puzzle.items.filter((it) => { if (it.trap) { applyItem(cB, src, it); applyItem(cA, src, it); return true; } const t = visMin(it.k) * .7; return applyItem(cB, src, it, t) >= t; }) : sampleItems(st.puzzle, cB, src); }
-  else { items = genItems(st, cB, src); if (st.mode === 'camp' && st.fl === 9) addTrap(st, cA, cB, src, items); }
+  // 내 진행(단지·자유 점검)만 도감에 없는 종류를 1곳 넣는다 (오늘의 집은 모두 같은 집이라 그대로)
+  const want = st.mode === 'camp' || st.mode === 'free' ? Object.keys(KINDS).filter((k) => !P.dex[k]) : [];
+  if (st.mode !== 'ugc') { items = genItems(st, cB, src, want.length ? want : undefined); if (st.mode === 'camp' && st.fl === 9) addTrap(st, cA, cB, src, items); }
   // 찾을 하자가 없는 집(옛 버그로 올라간 n:0 등)은 멈춘 판이 되니 열지 않는다
   // 받은 집(이웃·도전장)은 보이는 진짜 하자가 3개 미만이면 열지 않는다 (조작된 '안 보이는 집' 차단)
   const real = items.filter((it) => !it.trap).length;
@@ -2453,6 +2463,9 @@ async function startInner(st){
   G.easy = st.mode === 'camp' && st.L === 1 && !Object.values(P.stars).some(Boolean) ? 2 : 0; // 1단지 1층을 아직 못 깼으면 처음 두 번은 봐준다(오늘의 집·이웃 집은 안 봐줌)
   petStart(); runStart(); // 펫 그림·시간 보너스(아기 공룡·꼬마 용) · 연승 시간
   if (G.st.replay) whenPlay(() => toast('다시 점검! 하자 자리가 새로 바뀌었어요'), G.runAdd ? 4600 : 2000); // 외운 자리를 누르기 전에 (연승 토스트 뒤에)
+  // 새 기능 말풍선이 떠 있으면 사라진 뒤에
+  const nk = items.find((i) => !i.trap && want.includes(i.k))?.k, newT = () => ($('coach').hidden ? toast(`처음 보는 ${KINDS[nk].grp}가 숨어 있어요!`) : whenPlay(newT, 300));
+  if (cleared() >= 1 && nk) whenPlay(newT, G.st.replay ? (G.runAdd ? 7600 : 5000) : G.runAdd ? 4600 : 1000); // 카운트다운 뒤, 연승·다시 점검 토스트와 겹치지 않게
   if (st.mode === 'daily') { const ci = sceneCi(st.scene.id); if (ci > 0 && !unlocked(ci, 1)) whenPlay(() => toast(`${ciName(ci)} ${CHAPTERS[ci].name} 방을 미리 보여 드려요`), 4200); } // 연승 알림 뒤에
   sparkPlan(); ghostPlan(); // 반짝 보물(내 집 재료)·이번 판 재료 칩 · 보너스 단지 유령
   PLAT.log('stage_start', { key:st.key || st.mode, relax:G.relax ? 1 : 0 });
@@ -2460,7 +2473,7 @@ async function startInner(st){
   $('stageName').textContent = st.scene.name;
   const twNames = Object.values(TWIST).map((t) => t.name);
   // 머리줄이 좁아 특수층·준공 검사 꼬리표가 있으면 'Lv.N'은 뺀다 (지도·결과에는 있다)
-  const tags = st.label.split(' · ').filter((x) => x !== st.scene.name && !(x === '오늘의 집' && EVENTS.some((e) => st.label.startsWith(e.name + ' · ')))), lvTag = /^(Lv\.\d+|보너스 \d+층)$/;
+  const tags = shortLabel(st).split(' · ').filter((x) => x !== st.scene.name && !(EVENTS.some((e) => e.name === x) && st.scene.name.startsWith(x))), lvTag = /^(Lv\.\d+|보너스 \d+층)$/;
   // 360px 폭에서는 긴 꼬리표를 줄인다 (방 이름·꼬리표가 둘 다 '…'로 잘리지 않게)
   // 보너스 보통 층의 '보너스 N층'은 방 이름(7~8자)이 길어 430px 아래에서는 'N층', 360px에서는 뺀다 (보라 테마라 보너스인 게 보이고, 결과·지도에는 전체 이름)
   const short = innerWidth < 381 ? { '오늘의 집':'오늘', '준공 검사':'준공', '자유 점검':'자유' } : {}, sh = (x) => short[x] || (innerWidth < 431 && EVENTS.some((e) => e.name === x) ? '이벤트' : '') || x.replace(/^보너스 (\d+층)$/, innerWidth < 381 ? '' : innerWidth < 431 ? '$1' : '$&');
@@ -2623,7 +2636,7 @@ function found(i, hint){
   G.lastFindEl = G.el; G.missRun = 0; $('hintBtn').classList.remove('nudge');
   if (!hint) { G.combo = now - G.lastFind < (petPow() === 'spacecat' ? 6000 : 4500) ? G.combo + 1 : 1; G.lastFind = now; G.maxCombo = Math.max(G.maxCombo, G.combo); } else { G.helped = (G.helped || 0) + 1; if (G.aim) G.aimed = (G.aimed || 0) + 1; } // 무기로 찾은 곳은 별 계산에서 빼 준다
   mark(d, i, hint ? 'h' : ''); repair(d); ghostGot(i); drawDark(); fogDraw(); memoUi(); findJuice(d, hint);
-  const cnt = (P.dex[d.k] || 0); if (!cnt) { G.newDex.push(d.k); newTag(); } P.dex[d.k] = cnt + 1;
+  const cnt = (P.dex[d.k] || 0); if (!cnt) { G.newDex.push(d.k); newTag(); if ($('toast').textContent.includes('처음 보는')) $('toast').style.opacity = 0; } P.dex[d.k] = cnt + 1;
   if (hint) sfx.hint(); else sfx.find(G.combo);
   sfx.tape(.35); PLAT.haptic('tickMedium');
   if (G.tut && G.found.size < G.diffs.length) { $('finger')?.remove(); const n = G.diffs.length - G.found.size; coach(G.found.size === 1 ? `딩동댕! 테이프를 붙였어요. 남은 ${n}곳은 혼자 찾아봐요` : `잘했어요! 이제 ${n}곳 남았어요`, $('slots'), 3500, true); }
@@ -3203,7 +3216,7 @@ $('play').addEventListener('pointermove', (e) => { const p = PT.get(e.pointerId)
 $('pauseBtn').onclick = () => { if (!G) return; sfx.tap(); G.done && G.resultHtml ? showResult() : pauseSheet(); };
 function pauseSheet(){
   hum(false); // 레이저를 누른 채 멈춰도 지이잉이 남지 않게
-  sheet(`<span class="tape" style="align-self:flex-start">잠깐 쉬어요</span><h3 class="disp">${esc(G.st.label)}</h3><p>찾은 곳 ${G.found.size} / ${G.diffs.length}</p>
+  sheet(`<span class="tape" style="align-self:flex-start">잠깐 쉬어요</span><h3 class="disp">${esc(shortLabel(G.st))}</h3><p>찾은 곳 ${G.found.size} / ${G.diffs.length}</p>
     ${swBtn('muted')}${swBtn('bgm')}${swBtn('haptic')}
     <div class="row"><button class="btn w" type="button" data-act="quit">나가기</button>${G.st.mode === 'ugc' ? '' : '<button class="btn w" type="button" data-act="retry">처음부터</button>'}</div>
     <button class="btn y" type="button" data-act="close">계속하기</button>`);
@@ -3226,7 +3239,9 @@ function timeUp(){
   if (G.st.mode === 'ugc') return ugcResult(false);
   runReset();
   const more = !G.extended && adLeft() > 0, ask = !P.seen.relaxAsk; if (ask) { P.seen.relaxAsk = 1; save(); }
+  const nk = G.diffs.find((d, i) => !G.found.has(i) && !P.dex[d.k])?.k;
   endSheet(`<span class="tape" style="align-self:flex-start;background:var(--coral);color:#fff">시간 초과</span><h3 class="disp">${G.diffs.length - G.found.size}곳이 남았어요</h3>
+    ${nk ? `<p>처음 보는 ${KINDS[nk].grp}도 숨어 있었어요: <b style="color:var(--ink)">${esc(KINDS[nk].name)}</b></p>` : ''}
     <p>${more ? '30초만 더 있으면 찾을 수 있을 것 같아요.' : '다시 도전하면 같은 집이 나와요. 위치를 기억해 보세요.'}</p>
     ${more ? `<button class="btn y" type="button" data-act="more">${hasAd() ? '광고 보고 30초 더 받기' : `30초 더 받기 <span style="font-size:var(--f2)">무료 · 오늘 ${adLeft()}번 남음</span>`}</button>` : ''}
     <div class="row"><button class="btn w" type="button" data-act="reveal">정답 보기</button><button class="btn" type="button" data-act="retry">다시 도전</button></div>
@@ -3325,7 +3340,7 @@ function winNow(){
   // 이어 할 판: 다음 층 → (오늘의 집·레벨 100·자유 점검은) moreBtn. 지을 수 있으면 오른쪽은 '지금 짓기!'
   const cont = (cls) => (nextOk ? `<button class="btn ${cls}" type="button" data-act="next">다음 층</button>` : moreBtn(cls, st));
   endSheet(`<div class="stamp">점검<br>완료</div>
-    <h3 class="disp${st.mode === 'camp' ? '' : ' tall'}" style="padding-right:90px">${esc(st.label)}</h3>
+    <h3 class="disp${st.mode === 'camp' ? '' : ' tall'}" style="padding-right:90px">${esc(shortLabel(st))}</h3>
     ${cert}${st.mode === 'camp' ? starRow('bigstars', stars) : ''}${why ? `<p class="why">${why}${whyRun}</p>` : ''}
     <div class="stat">${G.relax ? `<div><span>돋보기</span><b>${helped}개</b></div>` : `<div><span>남은 시간</span><b>${Math.max(0, Math.round(G.left))}초</b></div>`}<div><span>최고 콤보</span><b>${G.maxCombo}번</b></div><div><span>헛손질</span><b>${G.wrong}번</b></div></div>
     ${gopen}${helped || aimed || G.relax || runOn ? `<div class="chips">${runOn ? `<span class="tape g">연속 ${run}번 성공! 다음 판 ${RUN_T[run]}초 더</span>` : ''}${G.relax ? '<span class="tape">느긋하게</span>' : ''}${aimed ? `<span class="tape">무기로 ${aimed}곳</span>` : ''}${helped ? '<span class="tape k">도움 받음</span>' : ''}</div>` : ''}
