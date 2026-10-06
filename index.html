@@ -187,7 +187,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mk.miss circle{stroke:var(--coral)}
 @keyframes draw{to{stroke-dashoffset:0}}
 .mk .newtag{position:absolute;left:50%;bottom:100%;transform:translate(-50%,-2px) rotate(3deg);white-space:nowrap;font-family:"Jua",sans-serif;font-size:var(--f3);line-height:1.1;padding:1px 7px 2px;border-radius:4px;background:var(--brick);color:#fff;animation:pop2dn .3s both}
-.mk .tg{position:absolute;left:50%;top:100%;transform:translate(-50%,2px) rotate(-3deg);white-space:nowrap;font-size:var(--f3);padding:1px 8px 2px;animation:pop .3s .35s both}
+.mk .tg.gone{animation:tgout .5s forwards!important}@keyframes tgout{to{opacity:0}}.mk .tg{pointer-events:none;position:absolute;left:50%;top:100%;transform:translate(-50%,2px) rotate(-3deg);white-space:nowrap;font-size:var(--f3);padding:1px 8px 2px;animation:pop .3s .35s both}
 .mk.el .tg{--tx:-6px;transform:translate(-6px,2px) rotate(-3deg)}.mk.er .tg{--tx:6px;left:auto;right:50%;transform:translate(6px,2px) rotate(-3deg)} /* 그림 가장자리 15% 안이면 안쪽으로 */
 @keyframes pop{from{transform:translate(var(--tx,-50%),2px) rotate(-3deg) scale(0)}to{transform:translate(var(--tx,-50%),2px) rotate(-3deg) scale(1)}}
 .x{position:absolute;transform:translate(-50%,-50%);font-family:"Jua",sans-serif;color:var(--coral);font-size:2.125rem;pointer-events:none;animation:xx .6s ease-out forwards;-webkit-text-stroke:1px #fff;z-index:5}
@@ -1912,7 +1912,7 @@ function genItems(st, ctxB, src, want){
     if (o[5]) ops = ops.filter((k) => o[5][bi] >> MISTAKE_KINDS.indexOf(k) & 1);
     ops = ops.filter(two);
     if (wk && !hit) ops = [...ops.filter((k) => wk.includes(k)), ...ops.filter((k) => !wk.includes(k))];
-    for (const k of ops) { const it = { k, x, y, s:sz, d:st.d, seed:Math.floor(R() * 1e9) };
+    for (const k of ops) { const it = { k, x, y, s:sz, d:st.d * .8, seed:Math.floor(R() * 1e9) };
       if (o[5]) { applyItem(ctxB, src, it); put(it); break; }
       if (applyItem(ctxB, src, it, thr) >= thr) { put(it); break; } }
   }
@@ -1927,9 +1927,9 @@ function genItems(st, ctxB, src, want){
     // 유령 층은 하자가 절반쯤 안 보여서, 보너스 1~4층은 막 연 아이들이 오는 곳이라 가늘고 작은 3등급은 뺀다
     const pool = base.filter((k) => (st.d < .17 || st.rest ? KINDS[k].tier === 1 : st.twist === 'ghost' || st.bonus && st.fl < 5 ? KINDS[k].tier < 3 : KINDS[k].tier < 3 || t3 < t3max) && (f[4] == null || f[4] >> DEFECT_KINDS.indexOf(k) & 1) && (!lim || two(k)));
     if (!pool.length) continue;
-    const k0 = pool[Math.floor(R() * pool.length)], k = (wk && !hit && pool.find((q) => wk.includes(q))) || k0, s = lerp(78, 56, st.d) * (.85 + R() * .3) * (LINEAR.includes(k) ? 1.5 : 1);
+    const k0 = pool[Math.floor(R() * pool.length)], k = (wk && !hit && pool.find((q) => wk.includes(q))) || k0, s = lerp(84, 64, st.d) * (.85 + R() * .3) * (LINEAR.includes(k) ? 1.5 : 1);
     if (!far(f[0], f[1], s * .62)) continue;
-    const it = { k, x:f[0], y:f[1], s, d:lerp(0, .25, st.d), seed:Math.floor(R() * 1e9) };
+    const it = { k, x:f[0], y:f[1], s, d:lerp(0, .12, st.d), seed:Math.floor(R() * 1e9) };
     if (f[4] == null && applyItem(ctxB, src, it, VIS_MIN_DEFECT) < VIS_MIN_DEFECT) continue;
     if (f[4] != null) applyItem(ctxB, src, it);
     put(it); if (KINDS[k].tier === 3) t3++;
@@ -2619,6 +2619,8 @@ function mark(d, i, cls){
     el.style.cssText = `left:${lp}%;top:${d.y / H * 100}%;width:${size}%;height:${size * W / H}%`;
     el.innerHTML = `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" pathLength="320"/></svg>${pi ? `<span class="tape tg${cls === 'miss' ? ' r' : ''}">${esc(name)}</span>` : ''}`;
     $(p).querySelector('.marks').appendChild(el);
+    // 사용자 의견(10/06): 이름표가 다음 하자를 가린다 → 찾은 이름표는 1.6초 보여 주고 흐려진다 (정답 보기 빨간 표는 남긴다)
+    if (pi && cls !== 'miss') setTimeout(() => el.querySelector('.tg')?.classList.add('gone'), 1600);
   });
   if (cls !== 'miss') { $('slots').children[i].classList.add('on'); $('slots').children[i].textContent = '✓'; slotsLabel(); }
 }
